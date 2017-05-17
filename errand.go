@@ -22,27 +22,27 @@ import (
 	"github.com/ankyra/escape-core/variables"
 )
 
-type errand struct {
+type Errand struct {
 	Name        string                `json:"name"`
 	Description string                `json:"description"`
 	Script      string                `json:"script"`
 	Inputs      []*variables.Variable `json:"inputs"`
 }
 
-func (e *errand) GetName() string {
+func (e *Errand) GetName() string {
 	return e.Name
 }
-func (e *errand) GetDescription() string {
+func (e *Errand) GetDescription() string {
 	return e.Description
 }
-func (e *errand) GetScript() string {
+func (e *Errand) GetScript() string {
 	return e.Script
 }
-func (e *errand) SetScript(s string) {
+func (e *Errand) SetScript(s string) {
 	e.Script = s
 }
 
-func (e *errand) GetInputs() []*variables.Variable {
+func (e *Errand) GetInputs() []*variables.Variable {
 	result := []*variables.Variable{}
 	for _, i := range e.Inputs {
 		result = append(result, i)
@@ -50,7 +50,7 @@ func (e *errand) GetInputs() []*variables.Variable {
 	return result
 }
 
-func (e *errand) Validate() error {
+func (e *Errand) Validate() error {
 	if e.Name == "" {
 		return fmt.Errorf("Missing name in errand")
 	} else if e.Script == "" {
@@ -67,7 +67,7 @@ func (e *errand) Validate() error {
 	return nil
 }
 
-func NewErrandFromDict(name string, dict interface{}) (*errand, error) {
+func NewErrandFromDict(name string, dict interface{}) (*Errand, error) {
 	switch dict.(type) {
 	case map[interface{}]interface{}:
 		errandMap := dict.(map[interface{}]interface{})
@@ -121,7 +121,7 @@ func NewErrandFromDict(name string, dict interface{}) (*errand, error) {
 			}
 
 		}
-		result := &errand{
+		result := &Errand{
 			Name:        name,
 			Description: description,
 			Script:      script,

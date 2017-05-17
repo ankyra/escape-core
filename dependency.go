@@ -20,48 +20,48 @@ import (
 	"github.com/ankyra/escape-core/parsers"
 )
 
-type dependency struct {
+type Dependency struct {
 	Build        string
 	Version      string
 	VariableName string
 }
 
-func NewDependencyFromMetadata(metadata *releaseMetadata) *dependency {
-	return &dependency{
+func NewDependencyFromMetadata(metadata *ReleaseMetadata) *Dependency {
+	return &Dependency{
 		Build:   metadata.GetName(),
 		Version: metadata.GetVersion(),
 	}
 }
 
-func NewDependencyFromString(str string) (*dependency, error) {
+func NewDependencyFromString(str string) (*Dependency, error) {
 	parsed, err := parsers.ParseDependency(str)
 	if err != nil {
 		return nil, err
 	}
-	return &dependency{
+	return &Dependency{
 		Build:        parsed.Build,
 		Version:      parsed.Version,
 		VariableName: parsed.VariableName,
 	}, nil
 }
 
-func (d *dependency) GetBuild() string {
+func (d *Dependency) GetBuild() string {
 	return d.Build
 }
-func (d *dependency) GetVariableName() string {
+func (d *Dependency) GetVariableName() string {
 	return d.VariableName
 }
-func (d *dependency) GetVersion() string {
+func (d *Dependency) GetVersion() string {
 	return d.Version
 }
 
-func (d *dependency) GetReleaseId() string {
+func (d *Dependency) GetReleaseId() string {
 	version := "v" + d.Version
 	if d.Version == "latest" {
 		version = d.Version
 	}
 	return d.Build + "-" + version
 }
-func (d *dependency) GetVersionlessReleaseId() string {
+func (d *Dependency) GetVersionlessReleaseId() string {
 	return d.Build
 }

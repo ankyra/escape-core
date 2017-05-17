@@ -34,14 +34,14 @@ type ExecStage struct {
 	Script string `json:"script"`
 }
 
-type releaseMetadata struct {
+type ReleaseMetadata struct {
 	ApiVersion  string                `json:"api_version"`
 	Branch      string                `json:"branch"`
 	Consumes    []string              `json:"consumes"`
 	Depends     []string              `json:"depends"`
 	Extends     []string              `json:"extends"`
 	Description string                `json:"description"`
-	Errands     map[string]*errand    `json:"errands"`
+	Errands     map[string]*Errand    `json:"errands"`
 	Files       map[string]string     `json:"files", {}`
 	Revision    string                `json:"git_revision"`
 	Inputs      []*variables.Variable `json:"inputs"`
@@ -58,8 +58,8 @@ type releaseMetadata struct {
 	Stages      map[string]*ExecStage `json:"stages"`
 }
 
-func NewEmptyReleaseMetadata() *releaseMetadata {
-	return &releaseMetadata{
+func NewEmptyReleaseMetadata() *ReleaseMetadata {
+	return &ReleaseMetadata{
 		ApiVersion:  "2",
 		Consumes:    []string{},
 		Provides:    []string{},
@@ -67,7 +67,7 @@ func NewEmptyReleaseMetadata() *releaseMetadata {
 		Extends:     []string{},
 		Files:       map[string]string{},
 		Metadata:    map[string]string{},
-		Errands:     map[string]*errand{},
+		Errands:     map[string]*Errand{},
 		Stages:      map[string]*ExecStage{},
 		Inputs:      []*variables.Variable{},
 		Outputs:     []*variables.Variable{},
@@ -76,14 +76,14 @@ func NewEmptyReleaseMetadata() *releaseMetadata {
 	}
 }
 
-func NewReleaseMetadata(name, version string) *releaseMetadata {
+func NewReleaseMetadata(name, version string) *ReleaseMetadata {
 	m := NewEmptyReleaseMetadata()
 	m.Name = name
 	m.Version = version
 	return m
 }
 
-func NewReleaseMetadataFromJsonString(content string) (*releaseMetadata, error) {
+func NewReleaseMetadataFromJsonString(content string) (*ReleaseMetadata, error) {
 	result := NewEmptyReleaseMetadata()
 	if err := json.Unmarshal([]byte(content), &result); err != nil {
 		return nil, fmt.Errorf("Couldn't unmarshal JSON release metadata: %s", err.Error())
@@ -94,7 +94,7 @@ func NewReleaseMetadataFromJsonString(content string) (*releaseMetadata, error) 
 	return result, nil
 }
 
-func NewReleaseMetadataFromFile(metadataFile string) (*releaseMetadata, error) {
+func NewReleaseMetadataFromFile(metadataFile string) (*ReleaseMetadata, error) {
 	if !util.PathExists(metadataFile) {
 		return nil, errors.New("Release metadata file " + metadataFile + " does not exist")
 	}
@@ -105,7 +105,7 @@ func NewReleaseMetadataFromFile(metadataFile string) (*releaseMetadata, error) {
 	return NewReleaseMetadataFromJsonString(string(content))
 }
 
-func validate(m *releaseMetadata) error {
+func validate(m *ReleaseMetadata) error {
 	if m.Name == "" {
 		return fmt.Errorf("Missing name field in release metadata")
 	}
@@ -117,13 +117,13 @@ func validate(m *releaseMetadata) error {
 	}
 	return nil
 }
-func (m *releaseMetadata) GetExtends() []string {
+func (m *ReleaseMetadata) GetExtends() []string {
 	return m.Extends
 }
-func (m *releaseMetadata) GetStages() map[string]*ExecStage {
+func (m *ReleaseMetadata) GetStages() map[string]*ExecStage {
 	return m.Stages
 }
-func (m *releaseMetadata) GetStage(stage string) *ExecStage {
+func (m *ReleaseMetadata) GetStage(stage string) *ExecStage {
 	result, ok := m.Stages[stage]
 	if !ok {
 		result = &ExecStage{}
@@ -132,109 +132,109 @@ func (m *releaseMetadata) GetStage(stage string) *ExecStage {
 	return result
 }
 
-func (m *releaseMetadata) SetStage(stage, script string) {
+func (m *ReleaseMetadata) SetStage(stage, script string) {
 	if script == "" {
 		return
 	}
 	st := m.GetStage(stage)
 	st.Script = script
 }
-func (m *releaseMetadata) GetScript(stage string) string {
+func (m *ReleaseMetadata) GetScript(stage string) string {
 	return m.GetStage(stage).Script
 }
-func (m *releaseMetadata) GetApiVersion() string {
+func (m *ReleaseMetadata) GetApiVersion() string {
 	return m.ApiVersion
 }
-func (m *releaseMetadata) GetBranch() string {
+func (m *ReleaseMetadata) GetBranch() string {
 	return m.Branch
 }
-func (m *releaseMetadata) SetConsumes(c []string) {
+func (m *ReleaseMetadata) SetConsumes(c []string) {
 	m.Consumes = c
 }
-func (m *releaseMetadata) GetConsumes() []string {
+func (m *ReleaseMetadata) GetConsumes() []string {
 	return m.Consumes
 }
-func (m *releaseMetadata) GetDescription() string {
+func (m *ReleaseMetadata) GetDescription() string {
 	return m.Description
 }
-func (m *releaseMetadata) GetErrands() map[string]*errand {
-	result := map[string]*errand{}
+func (m *ReleaseMetadata) GetErrands() map[string]*Errand {
+	result := map[string]*Errand{}
 	for key, val := range m.Errands {
 		result[key] = val
 	}
 	return result
 }
-func (m *releaseMetadata) GetFiles() map[string]string {
+func (m *ReleaseMetadata) GetFiles() map[string]string {
 	return m.Files
 }
-func (m *releaseMetadata) GetInputs() []*variables.Variable {
+func (m *ReleaseMetadata) GetInputs() []*variables.Variable {
 	result := []*variables.Variable{}
 	for _, i := range m.Inputs {
 		result = append(result, i)
 	}
 	return result
 }
-func (m *releaseMetadata) GetTemplates() []*templates.Template {
+func (m *ReleaseMetadata) GetTemplates() []*templates.Template {
 	return m.Templates
 }
-func (m *releaseMetadata) GetRevision() string {
+func (m *ReleaseMetadata) GetRevision() string {
 	return m.Revision
 }
-func (m *releaseMetadata) GetLogo() string {
+func (m *ReleaseMetadata) GetLogo() string {
 	return m.Logo
 }
-func (m *releaseMetadata) GetMetadata() map[string]string {
+func (m *ReleaseMetadata) GetMetadata() map[string]string {
 	return m.Metadata
 }
-func (m *releaseMetadata) GetName() string {
+func (m *ReleaseMetadata) GetName() string {
 	return m.Name
 }
-func (m *releaseMetadata) GetOutputs() []*variables.Variable {
+func (m *ReleaseMetadata) GetOutputs() []*variables.Variable {
 	result := []*variables.Variable{}
 	for _, i := range m.Outputs {
 		result = append(result, i)
 	}
 	return result
 }
-func (m *releaseMetadata) GetPath() string {
+func (m *ReleaseMetadata) GetPath() string {
 	return m.Path
 }
-func (m *releaseMetadata) GetProvides() []string {
+func (m *ReleaseMetadata) GetProvides() []string {
 	return m.Provides
 }
-func (m *releaseMetadata) GetVersion() string {
+func (m *ReleaseMetadata) GetVersion() string {
 	return m.Version
 }
-func (m *releaseMetadata) GetDependencies() []string {
+func (m *ReleaseMetadata) GetDependencies() []string {
 	return m.Depends
 }
-func (m *releaseMetadata) GetVariableContext() map[string]string {
+func (m *ReleaseMetadata) GetVariableContext() map[string]string {
 	if m.VariableCtx == nil {
 		return map[string]string{}
 	}
 	return m.VariableCtx
 }
-func (m *releaseMetadata) SetVariableInContext(v string, ref string) {
+func (m *ReleaseMetadata) SetVariableInContext(v string, ref string) {
 	ctx := m.GetVariableContext()
 	ctx[v] = ref
 	m.VariableCtx = ctx
 }
-func (m *releaseMetadata) GetReleaseId() string {
+func (m *ReleaseMetadata) GetReleaseId() string {
 	return m.Name + "-v" + m.Version
 }
 
-func (m *releaseMetadata) GetVersionlessReleaseId() string {
+func (m *ReleaseMetadata) GetVersionlessReleaseId() string {
 	return m.Name
 }
 
-func (m *releaseMetadata) AddInputVariable(input *variables.Variable) {
+func (m *ReleaseMetadata) AddInputVariable(input *variables.Variable) {
 	m.Inputs = append(m.Inputs, input)
 }
-func (m *releaseMetadata) AddOutputVariable(output *variables.Variable) {
+func (m *ReleaseMetadata) AddOutputVariable(output *variables.Variable) {
 	m.Outputs = append(m.Outputs, output)
 }
 
-func (m *releaseMetadata) ToJson() string {
+func (m *ReleaseMetadata) ToJson() string {
 	str, err := json.MarshalIndent(m, "", "   ")
 	if err != nil {
 		panic(err)
@@ -242,7 +242,7 @@ func (m *releaseMetadata) ToJson() string {
 	return string(str)
 }
 
-func (m *releaseMetadata) ToDict() (map[string]interface{}, error) {
+func (m *ReleaseMetadata) ToDict() (map[string]interface{}, error) {
 	asJson := []byte(m.ToJson())
 	result := map[string]interface{}{}
 	if err := json.Unmarshal(asJson, &result); err != nil {
@@ -251,20 +251,20 @@ func (m *releaseMetadata) ToDict() (map[string]interface{}, error) {
 	return result, nil
 }
 
-func (m *releaseMetadata) WriteJsonFile(path string) error {
+func (m *ReleaseMetadata) WriteJsonFile(path string) error {
 	contents := []byte(m.ToJson())
 	return ioutil.WriteFile(path, contents, 0644)
 }
 
-func (m *releaseMetadata) AddFileWithDigest(path, hexDigest string) {
+func (m *ReleaseMetadata) AddFileWithDigest(path, hexDigest string) {
 	m.Files[path] = hexDigest
 }
 
-func (m *releaseMetadata) ToDependency() *dependency {
+func (m *ReleaseMetadata) ToDependency() *Dependency {
 	return NewDependencyFromMetadata(m)
 }
 
-func (m *releaseMetadata) GetDirectories() []string {
+func (m *ReleaseMetadata) GetDirectories() []string {
 	dirs := map[string]bool{}
 	for file := range m.Files {
 		dir, _ := filepath.Split(file)
@@ -286,11 +286,11 @@ func (m *releaseMetadata) GetDirectories() []string {
 	return result
 }
 
-func (m *releaseMetadata) ToScript() script.Script {
+func (m *ReleaseMetadata) ToScript() script.Script {
 	return script.LiftDict(m.ToScriptMap())
 }
 
-func (m *releaseMetadata) ToScriptMap() map[string]script.Script {
+func (m *ReleaseMetadata) ToScriptMap() map[string]script.Script {
 	metadataDict := map[string]script.Script{}
 	for key, val := range m.GetMetadata() {
 		metadataDict[key] = script.LiftString(val)

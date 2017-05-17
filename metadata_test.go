@@ -19,11 +19,14 @@ package release
 import (
 	"github.com/ankyra/escape-core/variables"
 	. "gopkg.in/check.v1"
+	"testing"
 )
 
 type metadataSuite struct{}
 
 var _ = Suite(&metadataSuite{})
+
+func Test(t *testing.T) { TestingT(t) }
 
 func (s *metadataSuite) Test_GetReleaseId(c *C) {
 	m := NewReleaseMetadata("test-release", "0.1")
