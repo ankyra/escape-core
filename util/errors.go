@@ -1,25 +1,4 @@
-# Escape Core
-
-Please see http://escape.ankyra.io for the full documentation.
-
-## Build
-
-This library can be build using standard Go tools. 
-
-```
-git clone https://github.com/ankyra/escape-core.git "$GOPATH/src/github.com/ankyra/escape-core"
-go build
-```
-
-## Build
-
-```
-make test
-```
-
-## License
-
-```
+/*
 Copyright 2017 Ankyra
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,4 +12,16 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-```
+*/
+
+package util
+
+import (
+	"errors"
+	"strings"
+)
+
+func RecordError(cmd []string, err error) error {
+	cmdString := strings.Join(cmd, " ")
+	return errors.New("Failed to successfully execute command '" + cmdString + "': " + err.Error())
+}
