@@ -236,9 +236,24 @@ func (m *ReleaseMetadata) GetVersionlessReleaseId() string {
 }
 
 func (m *ReleaseMetadata) AddInputVariable(input *variables.Variable) {
-	m.Inputs = append(m.Inputs, input)
+    for _, i := range m.Inputs {
+        if i.GetId() == input.GetId() {
+            if !i.HasDefault() {
+                i.Default = input.Default
+            }
+            return
+        }
+    }
+    if !input.HasDefault() {
+        m.Inputs = append(m.Inputs, input)
+    }
 }
 func (m *ReleaseMetadata) AddOutputVariable(output *variables.Variable) {
+    for _, i := range m.Outputs {
+        if i.GetId() == output.GetId() {
+            return
+        }
+    }
 	m.Outputs = append(m.Outputs, output)
 }
 
