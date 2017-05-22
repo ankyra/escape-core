@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ankyra/escape-client/util"
+	"github.com/ankyra/escape-core/util"
 	"github.com/ankyra/escape-core/parsers"
 	"github.com/ankyra/escape-core/script"
 	"github.com/ankyra/escape-core/templates"
