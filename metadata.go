@@ -248,9 +248,7 @@ func (m *ReleaseMetadata) GetVersionlessReleaseId() string {
 func (m *ReleaseMetadata) AddInputVariable(input *variables.Variable) {
 	for _, i := range m.Inputs {
 		if i.GetId() == input.GetId() {
-			if !i.HasDefault() {
-				i.Default = input.Default
-			}
+			i.Default = input.Default
 			return
 		}
 	}
