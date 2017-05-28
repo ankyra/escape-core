@@ -97,7 +97,7 @@ func (s *metadataSuite) Test_GetDirectores(c *C) {
 
 func (s *metadataSuite) Test_FromJson(c *C) {
 	json := `{
-        "api_version": "1",
+        "api_version": 1,
         "consumes": [{ "Name": "provider1" }, 
                      { "name" : "provider2" }],
         "name": "test-release",
@@ -114,7 +114,7 @@ func (s *metadataSuite) Test_FromJson(c *C) {
 	c.Assert(m.Name, Equals, "test-release")
 	c.Assert(m.Description, Equals, "Test release")
 	c.Assert(m.Version, Equals, "0.1")
-    c.Assert(m.GetConsumes(), HasLen, 2)
+	c.Assert(m.GetConsumes(), HasLen, 2)
 	c.Assert(m.GetConsumes()[0], Equals, "provider1")
 	c.Assert(m.GetConsumes()[1], Equals, "provider2")
 	c.Assert(m.GetVariableContext()["base"], Equals, "test-depends-v1")
