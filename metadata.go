@@ -30,6 +30,8 @@ import (
 	"strings"
 )
 
+const CurrentApiVersion = "1"
+
 type ExecStage struct {
 	Script string `json:"script"`
 }
@@ -91,7 +93,7 @@ type ReleaseMetadata struct {
 
 func NewEmptyReleaseMetadata() *ReleaseMetadata {
 	return &ReleaseMetadata{
-		ApiVersion:  "3",
+		ApiVersion:  CurrentApiVersion,
 		Files:       map[string]string{},
 		Metadata:    map[string]string{},
 
