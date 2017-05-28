@@ -169,6 +169,14 @@ func (m *ReleaseMetadata) AddExtension(releaseId string) {
 	m.Extends = append(m.Extends, NewExtensionConfig(releaseId))
 }
 
+func (m *ReleaseMetadata) GetExtensions() []string {
+    result := []string{}
+    for _, ext := range m.Extends {
+        result = append(result, ext.ReleaseId)
+    }
+    return result
+}
+
 func (m *ReleaseMetadata) GetStage(stage string) *ExecStage {
 	result, ok := m.Stages[stage]
 	if !ok {
