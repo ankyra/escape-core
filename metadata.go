@@ -256,7 +256,7 @@ func (m *ReleaseMetadata) AddProvides(p string) {
 
 func (m *ReleaseMetadata) GetProvides() []string {
     result := []string{}
-    for _, c := range m.Consumes {
+    for _, c := range m.Provides {
         result = append(result, c.Name)
     }
 	return result
