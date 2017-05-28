@@ -20,8 +20,8 @@ import (
 	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
-    "strings"
 )
 
 type exprSuite struct{}
@@ -135,13 +135,13 @@ func (s *exprSuite) Test_Lift_Dict_interface(c *C) {
 
 func (s *exprSuite) Test_Lift_Func(c *C) {
 	v, err := Lift(strings.ToLower)
-    c.Assert(err, IsNil)
-    c.Assert(IsFunctionAtom(v), Equals, true)
-    apply := NewApply(v, []Script{LiftString("TEST")})
-    result, err := apply.Eval(nil)
-    c.Assert(err, IsNil)
-    c.Assert(IsStringAtom(result), Equals, true)
-    c.Assert(ExpectStringAtom(result), Equals, "test")
+	c.Assert(err, IsNil)
+	c.Assert(IsFunctionAtom(v), Equals, true)
+	apply := NewApply(v, []Script{LiftString("TEST")})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsStringAtom(result), Equals, true)
+	c.Assert(ExpectStringAtom(result), Equals, "test")
 }
 
 func (s *exprSuite) Test_Eval_String(c *C) {
