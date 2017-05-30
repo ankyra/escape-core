@@ -147,6 +147,9 @@ func validate(m *ReleaseMetadata) error {
 	if m.Version == "" {
 		return fmt.Errorf("Missing version field in release metadata")
 	}
+	if m.Project == "" {
+		m.Project = "_"
+	}
 	if m.ApiVersion <= 0 || m.ApiVersion > CurrentApiVersion {
 		return fmt.Errorf("The release metadata is compiled with a version of Escape targetting API version v%s, but this build supports up to v%s", m.ApiVersion, CurrentApiVersion)
 	}
