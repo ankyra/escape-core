@@ -112,7 +112,7 @@ func (s *metadataSuite) Test_FromJson(c *C) {
 	m, err := NewReleaseMetadataFromJsonString(json)
 	c.Assert(err, IsNil)
 	c.Assert(m.ApiVersion, Equals, 1)
-	c.Assert(m.Project, Equals, "my-project")
+	c.Assert(m.GetProject(), Equals, "my-project")
 	c.Assert(m.Name, Equals, "test-release")
 	c.Assert(m.Description, Equals, "Test release")
 	c.Assert(m.Version, Equals, "0.1")
