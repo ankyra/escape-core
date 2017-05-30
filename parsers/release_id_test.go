@@ -64,6 +64,33 @@ func (s *releaseIdSuite) Test_ReleaseId_Parse_Version(c *C) {
 	c.Assert(id.Version, Equals, "1.0")
 }
 
+func (s *releaseIdSuite) Test_NeedsResolving_true(c *C) {
+	cases := []string{
+		"name-latest",
+		"name-v@",
+		"name-v0.@",
+		"name-v0.0.0.@",
+	}
+	for _, test := range cases {
+		id, err := ParseReleaseId(test)
+		c.Assert(err, IsNil)
+		c.Assert(id.NeedsResolving(), Equals, true)
+	}
+}
+
+func (s *releaseIdSuite) Test_NeedsResolving_false(c *C) {
+	cases := []string{
+		"name-v1",
+		"name-v1.0",
+		"name-v0.0.0",
+	}
+	for _, test := range cases {
+		id, err := ParseReleaseId(test)
+		c.Assert(err, IsNil)
+		c.Assert(id.NeedsResolving(), Equals, false)
+	}
+}
+
 func (s *releaseIdSuite) Test_ReleaseId_Invalid_Format1(c *C) {
 	_, err := ParseReleaseId("type")
 	c.Assert(err.Error(), Equals, "Invalid release format: type")
@@ -79,6 +106,31 @@ func (s *releaseIdSuite) Test_ReleaseId_Missing_Version(c *C) {
 func (s *releaseIdSuite) Test_ReleaseId_Invalid_Version(c *C) {
 	_, err := ParseReleaseId("type-name-vnope")
 	c.Assert(err.Error(), Equals, "Invalid release ID 'type-name-vnope': Invalid version format: nope")
+}
+
+func (s *releaseIdSuite) Test_QualifiedReleaseID(c *C) {
+	q, err := ParseQualifiedReleaseId("project/type-name-v1")
+	c.Assert(err, IsNil)
+	c.Assert(q.Project, Equals, "project")
+	c.Assert(q.ToString(), Equals, "project/type-name-v1")
+}
+
+func (s *releaseIdSuite) Test_QualifiedReleaseID_default_project(c *C) {
+	q, err := ParseQualifiedReleaseId("type-name-v1")
+	c.Assert(err, IsNil)
+	c.Assert(q.Project, Equals, "_")
+	c.Assert(q.ToString(), Equals, "_/type-name-v1")
+}
+
+func (s *releaseIdSuite) Test_QualifiedReleaseID_fails_on_invalid_input(c *C) {
+	cases := []string{
+		"",
+		"project/type-name-vnope",
+	}
+	for _, test := range cases {
+		_, err := ParseQualifiedReleaseId(test)
+		c.Assert(err, Not(IsNil))
+	}
 }
 
 func (s *releaseIdSuite) Test_ValidateVersion(c *C) {
