@@ -30,14 +30,16 @@ func (s *dependencySuite) Test_Dependency_Happy_Path1(c *C) {
 	c.Assert(dep.Name, Equals, "name")
 	c.Assert(dep.Version, Equals, "1.0")
 	c.Assert(dep.VariableName, Equals, "")
+	c.Assert(dep.Project, Equals, "_")
 }
 
 func (s *dependencySuite) Test_Dependency_Happy_Path2(c *C) {
-	dep, err := ParseDependency("type-name-v1.0 as dep")
+	dep, err := ParseDependency("project/type-name-v1.0 as dep")
 	c.Assert(err, IsNil)
 	c.Assert(dep.Name, Equals, "type-name")
 	c.Assert(dep.Version, Equals, "1.0")
 	c.Assert(dep.VariableName, Equals, "dep")
+	c.Assert(dep.Project, Equals, "project")
 }
 
 func (s *dependencySuite) Test_Dependency_WhiteSpace(c *C) {
