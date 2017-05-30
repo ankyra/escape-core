@@ -37,7 +37,7 @@ func (s *metadataSuite) Test_GetReleaseId(c *C) {
 func (s *metadataSuite) Test_GetVersionlessReleaseId(c *C) {
 	m := NewReleaseMetadata("test-release", "0.1")
 	releaseId := m.GetVersionlessReleaseId()
-	c.Assert(releaseId, Equals, "test-release")
+	c.Assert(releaseId, Equals, "_/test-release")
 }
 
 func (s *metadataSuite) Test_VariableContext(c *C) {
