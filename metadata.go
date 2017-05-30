@@ -75,6 +75,7 @@ type ReleaseMetadata struct {
 	Files       map[string]string `json:"files", {}`
 	Logo        string            `json:"logo"`
 	Name        string            `json:"name"`
+	Project     string            `json:"project"`
 	Revision    string            `json:"git_revision"`
 	Metadata    map[string]string `json:"metadata"`
 	Version     string            `json:"version"`
@@ -145,6 +146,9 @@ func validate(m *ReleaseMetadata) error {
 	}
 	if m.Version == "" {
 		return fmt.Errorf("Missing version field in release metadata")
+	}
+	if m.Project == "" {
+		return fmt.Errorf("Missing project field in release metadata")
 	}
 	if m.ApiVersion <= 0 || m.ApiVersion > CurrentApiVersion {
 		return fmt.Errorf("The release metadata is compiled with a version of Escape targetting API version v%s, but this build supports up to v%s", m.ApiVersion, CurrentApiVersion)
@@ -304,6 +308,10 @@ func (m *ReleaseMetadata) SetVariableInContext(v string, ref string) {
 
 func (m *ReleaseMetadata) GetReleaseId() string {
 	return m.Name + "-v" + m.Version
+}
+
+func (m *ReleaseMetadata) GetQualifiedReleaseId() string {
+	return m.Project + "/" + m.Name + "-v" + m.Version
 }
 
 func (m *ReleaseMetadata) GetVersionlessReleaseId() string {
