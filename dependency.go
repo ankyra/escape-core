@@ -47,7 +47,7 @@ func NewDependencyFromString(str string) (*Dependency, error) {
 	}, nil
 }
 
-func (d *Dependency) GetBuild() string {
+func (d *Dependency) GetName() string {
 	return d.Name
 }
 func (d *Dependency) GetVariableName() string {
@@ -69,5 +69,5 @@ func (d *Dependency) GetQualifiedReleaseId() string {
 }
 
 func (d *Dependency) GetVersionlessReleaseId() string {
-	return d.Name
+	return d.Project + "/" + d.Name
 }
