@@ -115,6 +115,7 @@ func NewReleaseMetadata(name, version string) *ReleaseMetadata {
 	m := NewEmptyReleaseMetadata()
 	m.Name = name
 	m.Version = version
+	m.Project = "_"
 	return m
 }
 
