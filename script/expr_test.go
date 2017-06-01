@@ -156,6 +156,21 @@ func (s *exprSuite) Test_Lift_Func_string_string_to_string_slice(c *C) {
 	c.Assert(ExpectListAtom(result)[1], DeepEquals, LiftString("test2"))
 }
 
+func (s *exprSuite) Test_Lift_Func_string_slice_string_to_string(c *C) {
+	v, err := Lift(strings.Join)
+	c.Assert(err, IsNil)
+	c.Assert(IsFunctionAtom(v), Equals, true)
+	lst := []Script{
+		LiftString("test1"),
+		LiftString("test2"),
+	}
+	apply := NewApply(v, []Script{LiftList(lst), LiftString(" ")})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsStringAtom(result), Equals, true)
+	c.Assert(ExpectStringAtom(result), Equals, "test1 test2")
+}
+
 func (s *exprSuite) Test_Eval_String(c *C) {
 	v := LiftString("test")
 	result, err := EvalToGoValue(v, nil)

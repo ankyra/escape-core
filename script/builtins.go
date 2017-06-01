@@ -31,11 +31,15 @@ const (
 	func_builtinToLower   = "__lower"
 	func_builtinToUpper   = "__upper"
 	func_builtinTitle     = "__title"
+	func_builtinSplit     = "__split"
+	func_builtinJoin      = "__join"
 )
 
 var builtinToLower = ShouldLift(strings.ToLower)
 var builtinToUpper = ShouldLift(strings.ToUpper)
 var builtinTitle = ShouldLift(strings.ToTitle)
+var builtinSplit = ShouldLift(strings.Split)
+var builtinJoin = ShouldLift(strings.Join)
 
 func LiftGoFunc(f interface{}) Script {
 	name := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
@@ -57,6 +61,25 @@ func LiftGoFunc(f interface{}) Script {
 					return nil, fmt.Errorf("Expecting string argument in call to %s, but got %s", name, arg.Type().Name())
 				} else {
 					goArgs = append(goArgs, reflect.ValueOf(ExpectStringAtom(arg)))
+				}
+			} else if argType.Kind() == reflect.Slice {
+				if !IsListAtom(arg) {
+					return nil, fmt.Errorf("Expecting list argument in call to %s, but got %s", name, arg.Type().Name())
+				} else {
+					lst := ExpectListAtom(arg) // []Script
+					if argType.Elem().Kind() == reflect.String {
+						strArg := []string{}
+						for k := 0; k < len(lst); k++ {
+							if !IsStringAtom(lst[k]) {
+								return nil, fmt.Errorf("Expecting string value in list in call to %s, but got %s", name, arg.Type().Name())
+							} else {
+								strArg = append(strArg, ExpectStringAtom(lst[k]))
+							}
+						}
+						goArgs = append(goArgs, reflect.ValueOf(strArg))
+					} else {
+						return nil, fmt.Errorf("Unsupported slice type in function %s", name)
+					}
 				}
 			}
 		}

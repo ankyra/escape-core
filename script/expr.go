@@ -55,6 +55,8 @@ func Lift(val interface{}) (Script, error) {
 		return LiftGoFunc(val), nil
 	case func(string, string) string:
 		return LiftGoFunc(val), nil
+	case func([]string, string) string:
+		return LiftGoFunc(val), nil
 	case []string:
 		vals := []Script{}
 		for _, k := range val.([]string) {
