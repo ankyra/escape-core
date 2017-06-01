@@ -133,7 +133,7 @@ func (s *exprSuite) Test_Lift_Dict_interface(c *C) {
 	c.Assert(ExpectDictAtom(v), DeepEquals, expected)
 }
 
-func (s *exprSuite) Test_Lift_Func(c *C) {
+func (s *exprSuite) Test_Lift_Func_string_to_string(c *C) {
 	v, err := Lift(strings.ToLower)
 	c.Assert(err, IsNil)
 	c.Assert(IsFunctionAtom(v), Equals, true)
@@ -142,6 +142,18 @@ func (s *exprSuite) Test_Lift_Func(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(IsStringAtom(result), Equals, true)
 	c.Assert(ExpectStringAtom(result), Equals, "test")
+}
+
+func (s *exprSuite) Test_Lift_Func_string_string_to_string_slice(c *C) {
+	v, err := Lift(strings.Split)
+	c.Assert(err, IsNil)
+	c.Assert(IsFunctionAtom(v), Equals, true)
+	apply := NewApply(v, []Script{LiftString("test1 test2"), LiftString(" ")})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsListAtom(result), Equals, true)
+	c.Assert(ExpectListAtom(result)[0], DeepEquals, LiftString("test1"))
+	c.Assert(ExpectListAtom(result)[1], DeepEquals, LiftString("test2"))
 }
 
 func (s *exprSuite) Test_Eval_String(c *C) {
