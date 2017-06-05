@@ -103,3 +103,25 @@ func (s *exprSuite) Test_Builtin_Concat_fails_with_wrong_type(c *C) {
 	_, err := builtinConcat(nil, []Script{LiftList([]Script{})})
 	c.Assert(err, Not(IsNil))
 }
+
+func (s *exprSuite) Test_Builtin_base64_encode(c *C) {
+	apply := NewApply(builtinBase64Encode, []Script{LiftString("TEST")})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsStringAtom(result), Equals, true)
+	c.Assert(ExpectStringAtom(result), Equals, "VEVTVA==")
+}
+
+func (s *exprSuite) Test_Builtin_base64_decode(c *C) {
+	apply := NewApply(builtinBase64Decode, []Script{LiftString("VEVTVA==")})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsStringAtom(result), Equals, true)
+	c.Assert(ExpectStringAtom(result), Equals, "TEST")
+}
+
+func (s *exprSuite) Test_Builtin_base64_decode_fails_if_invalid(c *C) {
+	apply := NewApply(builtinBase64Decode, []Script{LiftString("1")})
+	_, err := apply.Eval(nil)
+	c.Assert(err, Not(IsNil))
+}
