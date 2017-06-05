@@ -49,16 +49,6 @@ func NewDependencyFromString(str string) (*Dependency, error) {
 	}, nil
 }
 
-func (d *Dependency) GetName() string {
-	return d.Name
-}
-func (d *Dependency) GetVariableName() string {
-	return d.VariableName
-}
-func (d *Dependency) GetVersion() string {
-	return d.Version
-}
-
 func (d *Dependency) GetReleaseId() string {
 	version := "v" + d.Version
 	if d.Version == "latest" {
