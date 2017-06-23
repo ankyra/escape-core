@@ -231,6 +231,50 @@ func (p *parserSuite) Test_ParseListIndex(c *C) {
 	c.Assert(IsFunctionAtom(atom.To), Equals, true)
 }
 
+func (p *parserSuite) Test_ParseListSlice(c *C) {
+	to := LiftString("whatever")
+	result := parseListIndex(to, "[12:13]")
+	c.Assert(result.Error, IsNil)
+	c.Assert(result.Rest, Equals, "")
+
+	apply := result.Result
+	c.Assert(IsApplyAtom(apply), Equals, true)
+
+	atom := ExpectApplyAtom(apply)
+	c.Assert(IsApplyAtom(atom.To), Equals, true)
+
+	c.Assert(atom.Arguments, HasLen, 3)
+	c.Assert(ExpectStringAtom(atom.Arguments[0]), Equals, "whatever")
+	c.Assert(ExpectIntegerAtom(atom.Arguments[1]), Equals, 12)
+	c.Assert(ExpectIntegerAtom(atom.Arguments[2]), Equals, 13)
+
+	atom = hasStringArgument(c, atom.To, "__list_slice")
+	atom = hasStringArgument(c, atom.To, "$")
+	c.Assert(IsFunctionAtom(atom.To), Equals, true)
+}
+
+func (p *parserSuite) Test_ParseListSlice_to_end(c *C) {
+	to := LiftString("whatever")
+	result := parseListIndex(to, "[12:]")
+	c.Assert(result.Error, IsNil)
+	c.Assert(result.Rest, Equals, "")
+
+	apply := result.Result
+	c.Assert(IsApplyAtom(apply), Equals, true)
+
+	atom := ExpectApplyAtom(apply)
+	c.Assert(IsApplyAtom(atom.To), Equals, true)
+
+	c.Assert(atom.Arguments, HasLen, 3)
+	c.Assert(ExpectStringAtom(atom.Arguments[0]), Equals, "whatever")
+	c.Assert(ExpectIntegerAtom(atom.Arguments[1]), Equals, 0)
+	c.Assert(ExpectIntegerAtom(atom.Arguments[2]), Equals, 12)
+
+	atom = hasStringArgument(c, atom.To, "__list_slice")
+	atom = hasStringArgument(c, atom.To, "$")
+	c.Assert(IsFunctionAtom(atom.To), Equals, true)
+}
+
 func (p *parserSuite) Test_ParseExpression_int(c *C) {
 	result := parseExpression("12")
 	c.Assert(result.Error, IsNil)
@@ -282,6 +326,13 @@ func (p *parserSuite) Test_ParseExpression_fail_table(c *C) {
 		"",
 		"-",
 		"$test()",
+		`$test.test(`,
+		`$test.test(12`,
+		`$test.test(12, `,
+		`$test.test(12, "test"`,
+		`$test.test[`,
+		`$test.test[12`,
+		`$test.test[12:`,
 	}
 	for _, testCase := range cases {
 		result := parseExpression(testCase)
