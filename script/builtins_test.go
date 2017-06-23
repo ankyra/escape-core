@@ -125,3 +125,12 @@ func (s *exprSuite) Test_Builtin_base64_decode_fails_if_invalid(c *C) {
 	_, err := apply.Eval(nil)
 	c.Assert(err, Not(IsNil))
 }
+
+func (s *exprSuite) Test_Builtin_replace(c *C) {
+	apply := NewApply(builtinReplace, []Script{
+		LiftString("TEST"), LiftString("T"), LiftString("B"), LiftInteger(1)})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsStringAtom(result), Equals, true)
+	c.Assert(ExpectStringAtom(result), Equals, "BEST")
+}
