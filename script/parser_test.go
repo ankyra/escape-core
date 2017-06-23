@@ -181,3 +181,15 @@ func (p *parserSuite) Test_ParseExpression_int(c *C) {
 	c.Assert(result.Rest, Equals, "")
 	c.Assert(ExpectIntegerAtom(result.Result), Equals, 12)
 }
+
+func (p *parserSuite) Test_ParseExpression_negative_int(c *C) {
+	result := parseExpression("-12")
+	c.Assert(result.Error, IsNil)
+	c.Assert(result.Rest, Equals, "")
+	c.Assert(ExpectIntegerAtom(result.Result), Equals, -12)
+}
+
+func (p *parserSuite) Test_ParseExpression_negative(c *C) {
+	result := parseExpression("-")
+	c.Assert(result.Error, Not(IsNil))
+}

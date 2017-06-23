@@ -96,6 +96,12 @@ func (s *primSuite) Test_Parse_Integer(c *C) {
 	c.Assert(*result, Equals, 12)
 }
 
+func (s *primSuite) Test_Parse_Negative_Integer(c *C) {
+	result, rest := ParseInteger("-12")
+	c.Assert(rest, Equals, "")
+	c.Assert(*result, Equals, -12)
+}
+
 func (s *primSuite) Test_Parse_Integer_Empty_String(c *C) {
 	result, rest := ParseInteger("")
 	c.Assert(rest, Equals, "")
