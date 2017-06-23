@@ -143,15 +143,51 @@ func (p *parserSuite) Test_Parse_And_Eval_Env_Lookup_with_function_calls(c *C) {
 	})
 	globalsDict := map[string]Script{
 		"gcp": gcpDict,
+		"lst": LiftList([]Script{LiftString("first item")}),
 	}
 	env := NewScriptEnvironmentWithGlobals(globalsDict)
 
-	script, err := ParseScript(`$__concat($gcp.inputs.version, "-", $gcp.inputs.extra)`)
-	c.Assert(err, IsNil)
+	cases := map[string]string{
+		`$gcp.inputs.version.concat("-", $gcp.inputs.extra)`:     `1.0-alpha`,
+		`$__concat($gcp.inputs.version, "-", $gcp.inputs.extra)`: `1.0-alpha`,
+		`$lst[0]`: `first item`,
+	}
+	for testCase, expected := range cases {
+		script, err := ParseScript(testCase)
+		c.Assert(err, IsNil, Commentf("Couldn't parse '%s'", testCase))
 
-	result, err := EvalToGoValue(script, env)
-	c.Assert(err, IsNil)
-	c.Assert(result, Equals, "1.0-alpha")
+		result, err := EvalToGoValue(script, env)
+		c.Assert(err, IsNil)
+		c.Assert(result, Equals, expected, Commentf("Error in '%s'", testCase))
+	}
+}
+
+func (p *parserSuite) Test_Parse_And_Eval_Env_Lookup_failing_cases(c *C) {
+	inputsDict := LiftDict(map[string]Script{
+		"version": LiftString("1.0"),
+		"extra":   LiftString("alpha"),
+	})
+	gcpDict := LiftDict(map[string]Script{
+		"inputs": inputsDict,
+	})
+	globalsDict := map[string]Script{
+		"gcp": gcpDict,
+		"lst": LiftList([]Script{LiftString("first item")}),
+	}
+	env := NewScriptEnvironmentWithGlobals(globalsDict)
+
+	cases := []string{
+		`$lst[0].replace()`,
+		`$lst[-1]`,
+		`$lst[1]`,
+	}
+	for _, testCase := range cases {
+		script, err := ParseScript(testCase)
+		c.Assert(err, IsNil, Commentf("Couldn't parse '%s'", testCase))
+
+		_, err = EvalToGoValue(script, env)
+		c.Assert(err, Not(IsNil), Commentf("Should have failed '%s'", testCase))
+	}
 }
 
 func (p *parserSuite) Test_Parse_And_Eval_Env_Lookup_with_method_calls(c *C) {
@@ -175,6 +211,26 @@ func (p *parserSuite) Test_Parse_And_Eval_Env_Lookup_with_method_calls(c *C) {
 	c.Assert(result, Equals, "1.0-alpha")
 }
 
+func (p *parserSuite) Test_ParseListIndex(c *C) {
+	to := LiftString("whatever")
+	result := parseListIndex(to, "[12]")
+	c.Assert(result.Error, IsNil)
+	c.Assert(result.Rest, Equals, "")
+
+	apply := result.Result
+	c.Assert(IsApplyAtom(apply), Equals, true)
+
+	atom := ExpectApplyAtom(apply)
+	c.Assert(IsApplyAtom(atom.To), Equals, true)
+	c.Assert(atom.Arguments, HasLen, 2)
+
+	c.Assert(ExpectStringAtom(atom.Arguments[0]), Equals, "whatever")
+	c.Assert(ExpectIntegerAtom(atom.Arguments[1]), Equals, 12)
+	atom = hasStringArgument(c, atom.To, "__list_index")
+	atom = hasStringArgument(c, atom.To, "$")
+	c.Assert(IsFunctionAtom(atom.To), Equals, true)
+}
+
 func (p *parserSuite) Test_ParseExpression_int(c *C) {
 	result := parseExpression("12")
 	c.Assert(result.Error, IsNil)
@@ -192,4 +248,43 @@ func (p *parserSuite) Test_ParseExpression_negative_int(c *C) {
 func (p *parserSuite) Test_ParseExpression_negative(c *C) {
 	result := parseExpression("-")
 	c.Assert(result.Error, Not(IsNil))
+}
+
+func (p *parserSuite) Test_ParseExpression_table(c *C) {
+	cases := []string{
+		`12`,
+		`-12`,
+		`"string"`,
+		"$test",
+		"$test.test",
+		"$test.test[12]",
+		"$test.test(12)",
+		"$test.test(12, 12, 123)",
+		`$__test()`,
+		`$test.test()`,
+		`$test.test("test")`,
+		`$test.test(12, "test")`,
+		`$test.test(12, "test", $recurse.test(12, "test"))`,
+		`$__test()[0]`,
+		`$test.test[12].test`,
+		`$test.test()[12]`,
+		`$test.test(12, "test", $test.test[1].contact("hallo", 12))[12]`,
+	}
+	for _, testCase := range cases {
+		result := parseExpression(testCase)
+		c.Assert(result.Error, IsNil, Commentf("Couldn't parse '%s'", testCase))
+		c.Assert(result.Rest, Equals, "", Commentf("Coulnd't parse '%s'", testCase))
+	}
+}
+
+func (p *parserSuite) Test_ParseExpression_fail_table(c *C) {
+	cases := []string{
+		"",
+		"-",
+		"$test()",
+	}
+	for _, testCase := range cases {
+		result := parseExpression(testCase)
+		c.Assert(result.Error != nil || result.Rest != "", Equals, true, Commentf("Shouldn't be able to parse '%s' (error: %s, rest: %s)", testCase, result.Error, result.Rest))
+	}
 }
