@@ -174,3 +174,10 @@ func (p *parserSuite) Test_Parse_And_Eval_Env_Lookup_with_method_calls(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(result, Equals, "1.0-alpha")
 }
+
+func (p *parserSuite) Test_ParseExpression_int(c *C) {
+	result := parseExpression("12")
+	c.Assert(result.Error, IsNil)
+	c.Assert(result.Rest, Equals, "")
+	c.Assert(ExpectIntegerAtom(result.Result), Equals, 12)
+}
