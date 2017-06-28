@@ -134,3 +134,43 @@ func (s *exprSuite) Test_Builtin_replace(c *C) {
 	c.Assert(IsStringAtom(result), Equals, true)
 	c.Assert(ExpectStringAtom(result), Equals, "BEST")
 }
+
+func (s *exprSuite) Test_Builtin_slice_no_end(c *C) {
+	lst := LiftList([]Script{LiftString("first"), LiftString("second")})
+	apply := NewApply(LiftFunction(builtinListSlice), []Script{lst, LiftInteger(0)})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsListAtom(result), Equals, true)
+	lstResult := ExpectListAtom(result)
+	c.Assert(lstResult, HasLen, 2)
+	c.Assert(ExpectStringAtom(lstResult[0]), Equals, "first")
+	c.Assert(ExpectStringAtom(lstResult[1]), Equals, "second")
+
+	apply = NewApply(LiftFunction(builtinListSlice), []Script{lst, LiftInteger(1)})
+	result, err = apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsListAtom(result), Equals, true)
+	lstResult = ExpectListAtom(result)
+	c.Assert(lstResult, HasLen, 1)
+	c.Assert(ExpectStringAtom(lstResult[0]), Equals, "second")
+}
+
+func (s *exprSuite) Test_Builtin_slice(c *C) {
+	lst := LiftList([]Script{LiftString("first"), LiftString("second")})
+	apply := NewApply(LiftFunction(builtinListSlice), []Script{lst, LiftInteger(0), LiftInteger(2)})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsListAtom(result), Equals, true)
+	lstResult := ExpectListAtom(result)
+	c.Assert(lstResult, HasLen, 2)
+	c.Assert(ExpectStringAtom(lstResult[0]), Equals, "first")
+	c.Assert(ExpectStringAtom(lstResult[1]), Equals, "second")
+
+	apply = NewApply(LiftFunction(builtinListSlice), []Script{lst, LiftInteger(1), LiftInteger(2)})
+	result, err = apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsListAtom(result), Equals, true)
+	lstResult = ExpectListAtom(result)
+	c.Assert(lstResult, HasLen, 1)
+	c.Assert(ExpectStringAtom(lstResult[0]), Equals, "second")
+}

@@ -288,7 +288,7 @@ func parseListIndex(lst Script, str string) *parseResult {
 		rest = strings.TrimSpace(rest[1:])
 		apply1 := NewApply(apply2, []Script{LiftString("__list_slice")})
 		if strings.HasPrefix(rest, "]") {
-			apply = NewApply(apply1, []Script{lst, LiftInteger(0), intResult.Result})
+			apply = NewApply(apply1, []Script{lst, intResult.Result})
 		} else {
 			endSlice := parseInteger(rest)
 			if endSlice.Error != nil {
@@ -306,7 +306,7 @@ func parseListIndex(lst Script, str string) *parseResult {
 			apply = NewApply(apply1, []Script{lst, intResult.Result})
 		} else {
 			apply1 := NewApply(apply2, []Script{LiftString("__list_slice")})
-			apply = NewApply(apply1, []Script{lst, intResult.Result})
+			apply = NewApply(apply1, []Script{lst, LiftInteger(0), intResult.Result})
 		}
 	}
 	rest = rest[1:]

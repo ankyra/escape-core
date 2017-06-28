@@ -271,10 +271,31 @@ func (p *parserSuite) Test_ParseListSlice_to_end(c *C) {
 	atom := ExpectApplyAtom(apply)
 	c.Assert(IsApplyAtom(atom.To), Equals, true)
 
+	c.Assert(atom.Arguments, HasLen, 2)
+	c.Assert(ExpectStringAtom(atom.Arguments[0]), Equals, "whatever")
+	c.Assert(ExpectIntegerAtom(atom.Arguments[1]), Equals, 12)
+
+	atom = hasStringArgument(c, atom.To, "__list_slice")
+	atom = hasStringArgument(c, atom.To, "$")
+	c.Assert(IsFunctionAtom(atom.To), Equals, true)
+}
+
+func (p *parserSuite) Test_ParseListSlice_from_beginning(c *C) {
+	to := LiftString("whatever")
+	result := parseListIndex(to, "[:2]")
+	c.Assert(result.Error, IsNil)
+	c.Assert(result.Rest, Equals, "")
+
+	apply := result.Result
+	c.Assert(IsApplyAtom(apply), Equals, true)
+
+	atom := ExpectApplyAtom(apply)
+	c.Assert(IsApplyAtom(atom.To), Equals, true)
+
 	c.Assert(atom.Arguments, HasLen, 3)
 	c.Assert(ExpectStringAtom(atom.Arguments[0]), Equals, "whatever")
 	c.Assert(ExpectIntegerAtom(atom.Arguments[1]), Equals, 0)
-	c.Assert(ExpectIntegerAtom(atom.Arguments[2]), Equals, 12)
+	c.Assert(ExpectIntegerAtom(atom.Arguments[2]), Equals, 2)
 
 	atom = hasStringArgument(c, atom.To, "__list_slice")
 	atom = hasStringArgument(c, atom.To, "$")

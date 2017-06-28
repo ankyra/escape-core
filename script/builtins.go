@@ -216,7 +216,6 @@ func builtinListSlice(env *ScriptEnvironment, inputValues []Script) (Script, err
 			return nil, fmt.Errorf("Expecting integer argument in list slice call, but got '%s'", endSliceArg.Type().Name())
 		}
 		endIndex := ExpectIntegerAtom(inputValues[2])
-		fmt.Println("LIFT ", index, endIndex)
 		return Lift(lst[index:endIndex])
 	}
 	return Lift(lst[index:])
