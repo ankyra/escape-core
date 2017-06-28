@@ -157,6 +157,7 @@ func (p *parserSuite) Test_Parse_And_Eval_Env_Lookup_with_function_calls(c *C) {
 		`$lst[0:2].join(", ")`: `first item, second item`,
 		`$lst[0:1].join(", ")`: `first item`,
 		`$lst[:1].join(", ")`:  `first item`,
+		`$lst[:-1].join(", ")`: `first item`,
 	}
 	for testCase, expected := range cases {
 		script, err := ParseScript(testCase)
