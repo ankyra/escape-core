@@ -17,8 +17,10 @@ limitations under the License.
 package core
 
 import (
+	"encoding/json"
 	"github.com/ankyra/escape-core/variables"
 	. "gopkg.in/check.v1"
+	"strconv"
 	"testing"
 )
 
@@ -27,6 +29,103 @@ type metadataSuite struct{}
 var _ = Suite(&metadataSuite{})
 
 func Test(t *testing.T) { TestingT(t) }
+
+func (s *metadataSuite) Test_NewReleaseMetadata_name_check(c *C) {
+	testCases := map[string]bool{
+		"valid":                                   true,
+		"valid-name":                              true,
+		"valid_name":                              true,
+		"valid1":                                  true,
+		"valid-name-2":                            true,
+		"  invalid":                               false,
+		"_invalid":                                false,
+		"invalid ":                                false,
+		"":                                        false,
+		"$":                                       false,
+		"a$":                                      false,
+		"1invalid-start":                          false,
+		"project/project-should-have-been-parsed": false,
+
+		// protected
+		"this":    false,
+		"string":  false,
+		"integer": false,
+		"list":    false,
+		"dict":    false,
+	}
+	for testCase, expected := range testCases {
+		obj := map[string]string{
+			"name":    testCase,
+			"version": "1.0",
+		}
+		payload, err := json.Marshal(obj)
+		c.Assert(err, IsNil)
+		m, err := NewReleaseMetadataFromJsonString(string(payload))
+		if expected {
+			c.Assert(err, IsNil)
+			c.Assert(m.Name, Equals, testCase)
+		} else {
+			c.Assert(err, Not(IsNil), Commentf("'%s' is not a valid name", testCase))
+		}
+	}
+}
+
+func (s *metadataSuite) Test_NewReleaseMetadata_project_check(c *C) {
+	testCases := map[string]bool{
+		"valid":                                   true,
+		"valid-name":                              true,
+		"valid_name":                              true,
+		"valid1":                                  true,
+		"valid-name-2":                            true,
+		"  invalid":                               false,
+		"_invalid":                                false,
+		"invalid ":                                false,
+		"$":                                       false,
+		"a$":                                      false,
+		"1invalid-start":                          false,
+		"project/project-should-have-been-parsed": false,
+
+		// protected
+		"this":    false,
+		"string":  false,
+		"integer": false,
+		"list":    false,
+		"dict":    false,
+	}
+	for testCase, expected := range testCases {
+		obj := map[string]string{
+			"name":    "name",
+			"version": "1.0",
+			"project": testCase,
+		}
+		payload, err := json.Marshal(obj)
+		c.Assert(err, IsNil)
+		m, err := NewReleaseMetadataFromJsonString(string(payload))
+		if expected {
+			c.Assert(err, IsNil)
+			c.Assert(m.Project, Equals, testCase)
+		} else {
+			c.Assert(err, Not(IsNil), Commentf("'%s' is not a valid project name", testCase))
+		}
+	}
+}
+
+func (s *metadataSuite) Test_validate(c *C) {
+	testCases := map[string]string{
+		`null`:                                                      "Missing release metadata",
+		`{}`:                                                        "Missing name field in release metadata",
+		`{"name": "1"}`:                                             "Invalid name '1'",
+		`{"name": "test"}`:                                          "Missing version field in release metadata",
+		`{"name": "test", "version": "1", "api_version": 1000}`:     "The release metadata is compiled with a version of Escape targetting API version v1000, but this build supports up to v" + strconv.Itoa(CurrentApiVersion),
+		`{"name": "name", "version": "@ASD"}`:                       "Invalid version format: @ASD",
+		`{"name": "name", "version": "1", "inputs": [{"id": ""}]}`:  "Variable object is missing an 'id'",
+		`{"name": "name", "version": "1", "outputs": [{"id": ""}]}`: "Variable object is missing an 'id'",
+	}
+	for testCase, expected := range testCases {
+		_, err := NewReleaseMetadataFromJsonString(testCase)
+		c.Assert(err.Error(), Equals, expected)
+	}
+}
 
 func (s *metadataSuite) Test_GetReleaseId(c *C) {
 	m := NewReleaseMetadata("test-release", "0.1")

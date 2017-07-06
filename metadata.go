@@ -27,10 +27,11 @@ import (
 	"github.com/ankyra/escape-core/variables"
 	"io/ioutil"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
-const CurrentApiVersion = 1
+const CurrentApiVersion = 2
 
 type ExecStage struct {
 	Script string `json:"script"`
@@ -78,6 +79,7 @@ type ReleaseMetadata struct {
 	Revision    string            `json:"git_revision"`
 	Metadata    map[string]string `json:"metadata"`
 	Version     string            `json:"version"`
+	Repository  string            `json:"repository"`
 
 	Consumes    []*ConsumerConfig     `json:"consumes"`
 	Depends     []*DependencyConfig   `json:"depends"`
@@ -145,14 +147,20 @@ func validate(m *ReleaseMetadata) error {
 	if m.Name == "" {
 		return fmt.Errorf("Missing name field in release metadata")
 	}
+	if err := validateName(m.Name); err != nil {
+		return err
+	}
 	if m.Version == "" {
 		return fmt.Errorf("Missing version field in release metadata")
 	}
 	if m.Project == "" {
 		m.Project = "_"
 	}
+	if err := validateName(m.Project); m.Project != "_" && err != nil {
+		return err
+	}
 	if m.ApiVersion <= 0 || m.ApiVersion > CurrentApiVersion {
-		return fmt.Errorf("The release metadata is compiled with a version of Escape targetting API version v%s, but this build supports up to v%s", m.ApiVersion, CurrentApiVersion)
+		return fmt.Errorf("The release metadata is compiled with a version of Escape targetting API version v%d, but this build supports up to v%d", m.ApiVersion, CurrentApiVersion)
 	}
 	if err := parsers.ValidateVersion(m.Version); err != nil {
 		return err
@@ -166,6 +174,24 @@ func validate(m *ReleaseMetadata) error {
 		if err := i.Validate(); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func validateName(name string) error {
+	re := regexp.MustCompile("^[a-z]+[a-z0-9-_]+$")
+	if !re.MatchString(name) {
+		return fmt.Errorf("Invalid name '%s'", name)
+	}
+	protectedNames := map[string]bool{
+		"this":    false,
+		"string":  false,
+		"integer": false,
+		"list":    false,
+		"dict":    false,
+	}
+	if _, found := protectedNames[name]; found {
+		return fmt.Errorf("The name '%s' is a protected variable.", name)
 	}
 	return nil
 }
