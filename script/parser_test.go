@@ -150,14 +150,16 @@ func (p *parserSuite) Test_Parse_And_Eval_Env_Lookup_with_function_calls(c *C) {
 	cases := map[string]string{
 		`$gcp.inputs.version.concat("-", $gcp.inputs.extra)`:     `1.0-alpha`,
 		`$__concat($gcp.inputs.version, "-", $gcp.inputs.extra)`: `1.0-alpha`,
-		`$lst[0]`:              `first item`,
-		`$lst.join(", ")`:      `first item, second item`,
-		`$lst[0:].join(", ")`:  `first item, second item`,
-		`$lst[:2].join(", ")`:  `first item, second item`,
-		`$lst[0:2].join(", ")`: `first item, second item`,
-		`$lst[0:1].join(", ")`: `first item`,
-		`$lst[:1].join(", ")`:  `first item`,
-		`$lst[:-1].join(", ")`: `first item`,
+		`$lst[0]`:                                                               `first item`,
+		`$lst.join(", ")`:                                                       `first item, second item`,
+		`$lst[0:].join(", ")`:                                                   `first item, second item`,
+		`$lst[:2].join(", ")`:                                                   `first item, second item`,
+		`$lst[0:2].join(", ")`:                                                  `first item, second item`,
+		`$lst[0:1].join(", ")`:                                                  `first item`,
+		`$lst[:1].join(", ")`:                                                   `first item`,
+		`$lst[:-1].join(", ")`:                                                  `first item`,
+		`$func(listVar, joinStr) { $listVar.join($joinStr) }($lst, " ## ")`:     `first item ## second item`,
+		`$func(listVar, joinStr) { $listVar.join($joinStr) }($lst[1:], " ## ")`: `second item`,
 	}
 	for testCase, expected := range cases {
 		script, err := ParseScript(testCase)

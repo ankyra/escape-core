@@ -40,6 +40,7 @@ const (
 	func_builtinTrim         = "__trim"
 	func_builtinListIndex    = "__list_index"
 	func_builtinListSlice    = "__list_slice"
+	func_builtinAdd          = "__add"
 )
 
 var builtinToLower = ShouldLift(strings.ToLower)
@@ -224,6 +225,6 @@ func builtinListSlice(env *ScriptEnvironment, inputValues []Script) (Script, err
 	return Lift(lst[index:])
 }
 
-func builtinPlus(x, y int) int {
+func builtinAdd(x, y int) int {
 	return x + y
 }
