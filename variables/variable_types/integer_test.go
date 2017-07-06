@@ -17,26 +17,27 @@ limitations under the License.
 package variable_types
 
 import (
-	"fmt"
+	. "gopkg.in/check.v1"
 )
 
-var boolType = NewUserManagedVariableType("bool", validateBool)
-
-func validateBool(value interface{}, options map[string]interface{}) (interface{}, error) {
-	switch value.(type) {
-	case bool:
-		return value.(bool), nil
-	case int:
-		return value.(int) >= 1, nil
-	case string:
-		truthy := map[string]bool{
-			"true": true,
-			"1":    true,
-			"yay":  true,
-			"yes":  true,
-		}
-		_, found := truthy[value.(string)]
-		return found, nil
+func (s *variableSuite) Test_ValidateInt(c *C) {
+	testCases := map[interface{}]int{
+		0:       0,
+		1:       1,
+		1000:    1000,
+		-1000:   -1000,
+		0.0:     0,
+		1.0:     1,
+		1000.0:  1000,
+		-1000.0: -1000,
+		"0":     0,
+		"1":     1,
+		"1000":  1000,
+		"-1000": -1000,
 	}
-	return nil, fmt.Errorf("Expecting 'bool' value, but got '%T'", value)
+	for testCase, expected := range testCases {
+		result, err := validateInt(testCase, nil)
+		c.Assert(err, IsNil)
+		c.Assert(result, Equals, expected, Commentf("'%v' should be '%v'", testCase, expected))
+	}
 }
