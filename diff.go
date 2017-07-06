@@ -55,8 +55,10 @@ func diff(name string, oldValue, newValue interface{}) Changes {
 		if r := diffSimpleType(name, oldValue, newValue); r != nil {
 			return []Change{*r}
 		}
-	} else if typ == "*core.ExecStage" {
-		return diffExecStage(name, oldValue, newValue)
+	} else if kind == "ptr" {
+		return diffPointer(name, oldValue, newValue)
+	} else if kind == "struct" {
+		return diffStruct(name, oldValue, newValue)
 	} else if kind == "map" {
 		return diffMap(name, oldValue, newValue)
 	} else if kind == "slice" {
@@ -65,6 +67,26 @@ func diff(name string, oldValue, newValue interface{}) Changes {
 		fmt.Printf("WARN: Undiffable type '%s' (%s) for field '%s'\n", typ, kind, name)
 	}
 	return []Change{}
+}
+
+func diffStruct(name string, oldValue, newValue interface{}) Changes {
+	result := []Change{}
+	oldVal := reflect.Indirect(reflect.ValueOf(oldValue))
+	newVal := reflect.Indirect(reflect.ValueOf(newValue))
+	fields := oldVal.Type().NumField()
+	for i := 0; i < fields; i++ {
+		field := oldVal.Type().Field(i).Name
+		oldValue := oldVal.Field(i).Interface()
+		newValue := newVal.FieldByName(field).Interface()
+		newName := name + " field " + field
+		if oldVal.NumField() == 1 {
+			newName = name
+		}
+		for _, change := range diff(newName, oldValue, newValue) {
+			result = append(result, change)
+		}
+	}
+	return result
 }
 
 func diffSimpleType(name string, oldValue, newValue interface{}) *Change {
@@ -117,13 +139,22 @@ func diffSlice(name string, oldValue, newValue interface{}) []Change {
 	return nil
 }
 
-func diffExecStage(name string, oldValue, newValue interface{}) []Change {
-	if reflect.DeepEqual(oldValue, newValue) {
-		return nil
+func diffPointer(name string, oldValue, newValue interface{}) []Change {
+	changes := []Change{}
+	if oldValue == nil {
+		if newValue == nil {
+			return changes
+		} else {
+			v := reflect.Indirect(reflect.ValueOf(newValue)).Interface()
+			changes = append(changes, Change{name, nil, diffValue(v), true, false})
+		}
+	} else if newValue == nil {
+		v := reflect.Indirect(reflect.ValueOf(oldValue)).Interface()
+		changes = append(changes, Change{name, diffValue(v), nil, true, false})
 	}
-	oldStage := oldValue.(*ExecStage)
-	newStage := newValue.(*ExecStage)
-	return diff(name, oldStage.Script, newStage.Script)
+	oldVal := reflect.Indirect(reflect.ValueOf(oldValue)).Interface()
+	newVal := reflect.Indirect(reflect.ValueOf(newValue)).Interface()
+	return diff(name, oldVal, newVal)
 }
 
 func diffValue(v interface{}) interface{} {
@@ -132,7 +163,6 @@ func diffValue(v interface{}) interface{} {
 		return v
 	case *ExecStage:
 		return v.(*ExecStage).Script
-
 	}
 	return v
 }
