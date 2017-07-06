@@ -19,6 +19,7 @@ package script
 import (
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -27,22 +28,27 @@ import (
 )
 
 const (
-	func_builtinId           = "__id"
-	func_builtinEnvLookup    = "__envLookup"
-	func_builtinConcat       = "__concat"
-	func_builtinToLower      = "__lower"
-	func_builtinToUpper      = "__upper"
-	func_builtinTitle        = "__title"
-	func_builtinSplit        = "__split"
-	func_builtinJoin         = "__join"
-	func_builtinReplace      = "__replace"
-	func_builtinBase64Encode = "__base64_encode"
-	func_builtinBase64Decode = "__base64_decode"
-	func_builtinTrim         = "__trim"
-	func_builtinListIndex    = "__list_index"
-	func_builtinListSlice    = "__list_slice"
-	func_builtinAdd          = "__add"
-	func_builtinTimestamp    = "__timestamp"
+	func_builtinId                = "__id"
+	func_builtinEnvLookup         = "__envLookup"
+	func_builtinConcat            = "__concat"
+	func_builtinToLower           = "__lower"
+	func_builtinToUpper           = "__upper"
+	func_builtinTitle             = "__title"
+	func_builtinSplit             = "__split"
+	func_builtinJoin              = "__join"
+	func_builtinReplace           = "__replace"
+	func_builtinBase64Encode      = "__base64_encode"
+	func_builtinBase64Decode      = "__base64_decode"
+	func_builtinTrim              = "__trim"
+	func_builtinListIndex         = "__list_index"
+	func_builtinListSlice         = "__list_slice"
+	func_builtinAdd               = "__add"
+	func_builtinTimestamp         = "__timestamp"
+	func_builtinReadFile          = "__read_file"
+	func_builtinTrackMajorVersion = "__track_major_version"
+	func_builtinTrackMinorVersion = "__track_minor_version"
+	func_builtinTrackPatchVersion = "__track_patch_version"
+	func_builtinTrackVersion      = "__track_version"
 )
 
 var builtinToLower = ShouldLift(strings.ToLower)
@@ -225,6 +231,14 @@ func builtinListSlice(env *ScriptEnvironment, inputValues []Script) (Script, err
 		return Lift(lst[index:endIndex])
 	}
 	return Lift(lst[index:])
+}
+
+func builtinReadfile(arg string) (string, error) {
+	bytes, err := ioutil.ReadFile(arg)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
 
 func builtinTimestamp() string {

@@ -160,10 +160,10 @@ func (p *parserSuite) Test_Parse_And_Eval_Env_Lookup_with_function_calls(c *C) {
 		`$lst[:-1].join(", ")`:                                                  `first item`,
 		`$func(listVar, joinStr) { $listVar.join($joinStr) }($lst, " ## ")`:     `first item ## second item`,
 		`$func(listVar, joinStr) { $listVar.join($joinStr) }($lst[1:], " ## ")`: `second item`,
-		`$gcp.inputs.version.trackVersion()`:                                    `1.2.3.@`,
-		`$gcp.inputs.version.trackMajorVersion()`:                               `1.@`,
-		`$gcp.inputs.version.trackMinorVersion()`:                               `1.2.@`,
-		`$gcp.inputs.version.trackPatchVersion()`:                               `1.2.3.@`,
+		`$gcp.inputs.version.track_version()`:                                   `1.2.3.@`,
+		`$gcp.inputs.version.track_major_version()`:                             `1.@`,
+		`$gcp.inputs.version.track_minor_version()`:                             `1.2.@`,
+		`$gcp.inputs.version.track_patch_version()`:                             `1.2.3.@`,
 	}
 	for testCase, expected := range cases {
 		script, err := ParseScript(testCase)
