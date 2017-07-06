@@ -61,6 +61,14 @@ func ParseScript(str string) (Script, error) {
 	return result.Result, nil
 }
 
+func ShouldParse(str string) Script {
+	result, err := ParseScript(str)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 // TODO
 // "this should concat {{ $gcp.test }} yall"
 

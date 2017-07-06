@@ -228,6 +228,15 @@ func (s *exprSuite) Test_ExpectIntegerAtom(c *C) {
 	c.Assert(func() { ExpectIntegerAtom(LiftString("test")) }, Panics, "Expecting integer type, got string")
 }
 
+func (s *exprSuite) Test_Eval_Lambda(c *C) {
+	body := NewApply(ShouldLift(builtinPlus), []Script{ShouldParse("$var1"), ShouldParse("$var2")})
+	lambda := NewLambda([]string{"var1", "var2"}, body)
+	v := NewApply(lambda, []Script{LiftInteger(1), LiftInteger(3)})
+	result, err := EvalToGoValue(v, nil)
+	c.Assert(err, IsNil)
+	c.Assert(result, DeepEquals, 4)
+}
+
 func (s *exprSuite) Test_Eval_List(c *C) {
 	list := []Script{LiftString("test"), LiftInteger(12)}
 	v := LiftList(list)

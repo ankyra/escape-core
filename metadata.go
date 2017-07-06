@@ -189,6 +189,7 @@ func validateName(name string) error {
 		"integer": false,
 		"list":    false,
 		"dict":    false,
+		"func":    false,
 	}
 	if _, found := protectedNames[name]; found {
 		return fmt.Errorf("The name '%s' is a protected variable.", name)

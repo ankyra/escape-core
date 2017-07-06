@@ -223,3 +223,7 @@ func builtinListSlice(env *ScriptEnvironment, inputValues []Script) (Script, err
 	}
 	return Lift(lst[index:])
 }
+
+func builtinPlus(x, y int) int {
+	return x + y
+}

@@ -52,6 +52,7 @@ func (s *metadataSuite) Test_NewReleaseMetadata_name_check(c *C) {
 		"integer": false,
 		"list":    false,
 		"dict":    false,
+		"func":    false,
 	}
 	for testCase, expected := range testCases {
 		obj := map[string]string{
