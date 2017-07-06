@@ -49,6 +49,11 @@ func NewScriptEnvironmentWithGlobals(globals map[string]Script) *ScriptEnvironme
 	globals[func_builtinAdd] = ShouldLift(builtinAdd)
 	globals[func_builtinListIndex] = LiftFunction(builtinListIndex)
 	globals[func_builtinListSlice] = LiftFunction(builtinListSlice)
+	globals[func_builtinTimestamp] = ShouldLift(builtinTimestamp)
+	globals["__trackMajorVersion"] = ShouldParse(`$func(v) { $v.split(".")[:1].join(".").concat(".@") }`)
+	globals["__trackMinorVersion"] = ShouldParse(`$func(v) { $v.split(".")[:2].join(".").concat(".@") }`)
+	globals["__trackPatchVersion"] = ShouldParse(`$func(v) { $v.split(".")[:3].join(".").concat(".@") }`)
+	globals["__trackVersion"] = ShouldParse(`$func(v) { $v.concat(".@") }`)
 	globalsDict := LiftDict(globals)
 	result["$"] = globalsDict
 	return &result

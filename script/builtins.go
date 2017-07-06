@@ -23,6 +23,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -41,6 +42,7 @@ const (
 	func_builtinListIndex    = "__list_index"
 	func_builtinListSlice    = "__list_slice"
 	func_builtinAdd          = "__add"
+	func_builtinTimestamp    = "__timestamp"
 )
 
 var builtinToLower = ShouldLift(strings.ToLower)
@@ -223,6 +225,10 @@ func builtinListSlice(env *ScriptEnvironment, inputValues []Script) (Script, err
 		return Lift(lst[index:endIndex])
 	}
 	return Lift(lst[index:])
+}
+
+func builtinTimestamp() string {
+	return strconv.Itoa(int(time.Now().Unix()))
 }
 
 func builtinAdd(x, y int) int {

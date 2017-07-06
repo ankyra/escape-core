@@ -51,6 +51,8 @@ func Lift(val interface{}) (Script, error) {
 		return LiftList(val.([]Script)), nil
 	case scriptFuncType:
 		return LiftFunction(val.(scriptFuncType)), nil
+	case func() string:
+		return LiftGoFunc(val), nil
 	case func([]byte) string:
 		return LiftGoFunc(val), nil
 	case func(string) ([]byte, error):
