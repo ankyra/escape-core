@@ -17,6 +17,7 @@ limitations under the License.
 package core
 
 import (
+	"github.com/ankyra/escape-core/templates"
 	"github.com/ankyra/escape-core/variables"
 	. "gopkg.in/check.v1"
 	"reflect"
@@ -334,6 +335,49 @@ func (s *metadataSuite) Test_Diff_Slices(c *C) {
 		}
 		if !expected.Removed {
 			c.Assert(changes[0].NewValue, DeepEquals, test[5], Commentf("Field %s", expectedField))
+		}
+	}
+}
+
+func (s *metadataSuite) Test_Diff_Templates(c *C) {
+	v1 := map[interface{}]interface{}{
+		"file":   "test.tpl",
+		"target": "test.sh",
+	}
+	v2 := map[interface{}]interface{}{
+		"file":   "test2.tpl",
+		"target": "test.sh",
+	}
+	v3 := map[interface{}]interface{}{
+		"file":   "test.tpl",
+		"target": "/other",
+	}
+	testCases := [][]interface{}{
+		[]interface{}{v1, v2, Change{Removed: false, Added: false, Field: `Templates[0].File`}, "test.tpl", "test2.tpl"},
+		[]interface{}{v1, v3, Change{Removed: false, Added: false, Field: `Templates[0].Target`}, "test.sh", "/other"},
+	}
+	for _, test := range testCases {
+		m1 := NewReleaseMetadata("test", "1.0")
+		m2 := NewReleaseMetadata("test", "1.0")
+
+		e1, err := templates.NewTemplateFromInterface(test[0].(map[interface{}]interface{}))
+		e2, err2 := templates.NewTemplateFromInterface(test[1].(map[interface{}]interface{}))
+		c.Assert(err, IsNil)
+		c.Assert(err2, IsNil)
+		m1.Templates = append(m1.Templates, e1)
+		m2.Templates = append(m2.Templates, e2)
+
+		expected := test[2].(Change)
+		changes := Diff(m1, m2)
+		c.Assert(changes, HasLen, 1, Commentf(expected.Field))
+		c.Assert(changes[0].Field, DeepEquals, expected.Field)
+		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
+		c.Assert(changes[0].Added, DeepEquals, expected.Added, Commentf(expected.Field))
+		if !expected.Added {
+			c.Assert(changes[0].PreviousValue, DeepEquals, test[3], Commentf("Field %s", expected.Field))
+		}
+		if !expected.Removed {
+			c.Assert(changes[0].NewValue, DeepEquals, test[4], Commentf("Field %s", expected.Field))
 		}
 	}
 }

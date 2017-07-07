@@ -130,8 +130,6 @@ func diffMap(name string, oldValue, newValue interface{}) []Change {
 		if !oldVal.IsValid() {
 			field := fmt.Sprintf(`%s["%s"]`, name, key)
 			changes = append(changes, Change{field, nil, diffValue(newVal), true, false})
-		} else {
-			fmt.Printf("%s didn't change %v\n", key, oldVal)
 		}
 	}
 	return changes
