@@ -282,3 +282,48 @@ func (s *metadataSuite) Test_Diff_Variables(c *C) {
 		}
 	}
 }
+
+func (s *metadataSuite) Test_Diff_Slices(c *C) {
+	testCases := [][]interface{}{
+		[]interface{}{"Consumes", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Consumes"}, "test", ""},
+		[]interface{}{"Consumes", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Consumes"}, "", "test"},
+		[]interface{}{"Consumes", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Consumes[0]"}, "test", "kubernetes"},
+
+		[]interface{}{"Provides", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Provides"}, "test", ""},
+		[]interface{}{"Provides", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Provides"}, "", "test"},
+		[]interface{}{"Provides", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Provides[0]"}, "test", "kubernetes"},
+	}
+	for _, test := range testCases {
+		m1 := NewReleaseMetadata("test", "1.0")
+		m2 := NewReleaseMetadata("test", "1.0")
+		typ := test[0].(string)
+		if typ == "Consumes" {
+			for _, consumer := range test[1].([]string) {
+				m1.AddConsumes(consumer)
+			}
+			for _, consumer := range test[2].([]string) {
+				m2.AddConsumes(consumer)
+			}
+		} else if typ == "Provides" {
+			for _, consumer := range test[1].([]string) {
+				m1.AddProvides(consumer)
+			}
+			for _, consumer := range test[2].([]string) {
+				m2.AddProvides(consumer)
+			}
+		}
+		expected := test[3].(Change)
+		expectedField := expected.Field
+		changes := Diff(m1, m2)
+		c.Assert(changes, HasLen, 1, Commentf(expectedField))
+		c.Assert(changes[0].Field, DeepEquals, expectedField)
+		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
+		c.Assert(changes[0].Added, DeepEquals, expected.Added, Commentf(expectedField))
+		if !expected.Added {
+			c.Assert(changes[0].PreviousValue, DeepEquals, test[4], Commentf("Field %s", expectedField))
+		}
+		if !expected.Removed {
+			c.Assert(changes[0].NewValue, DeepEquals, test[5], Commentf("Field %s", expectedField))
+		}
+	}
+}

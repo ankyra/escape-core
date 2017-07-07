@@ -86,13 +86,10 @@ func diffStruct(name string, oldValue, newValue interface{}) Changes {
 		if oldVal.NumField() == 1 {
 			newName = name
 		}
-		fmt.Printf("Diffing %s %v -> %v\n", newName, oldValue, newValue)
 		for _, change := range diff(newName, oldValue, newValue) {
-			fmt.Printf("%v\n", change)
 			result = append(result, change)
 		}
 	}
-	fmt.Printf("%v\n", result)
 	return result
 }
 
@@ -154,16 +151,22 @@ func diffSlice(name string, oldValue, newValue interface{}) []Change {
 	}
 	for ix := 0; ix < until; ix++ {
 		if ix >= oldValLen {
-			changes = append(changes, Change{name, nil, diffValue(newVal.Index(ix).Interface()), true, false})
+			if ix < newValLen {
+				val := newVal.Index(ix).Interface()
+				changes = append(changes, Change{name, nil, diffValue(val), true, false})
+			}
 			continue
 		} else if ix >= newValLen {
-			changes = append(changes, Change{name, diffValue(oldVal.Index(ix).Interface()), nil, false, true})
+			if ix < oldValLen {
+				val := oldVal.Index(ix).Interface()
+				changes = append(changes, Change{name, diffValue(val), nil, false, true})
+			}
 			continue
+		} else {
+			for _, change := range diff(name+"["+strconv.Itoa(ix)+"]", oldVal.Index(ix).Interface(), newVal.Index(ix).Interface()) {
+				changes = append(changes, change)
+			}
 		}
-		for _, change := range diff(name+"["+strconv.Itoa(ix)+"]", oldVal.Index(ix).Interface(), newVal.Index(ix).Interface()) {
-			changes = append(changes, change)
-		}
-
 	}
 	return changes
 }
@@ -199,6 +202,10 @@ func diffValue(v interface{}) interface{} {
 		return v
 	case *ExecStage:
 		return v.(*ExecStage).Script
+	case *ConsumerConfig:
+		return v.(*ConsumerConfig).Name
+	case *ProviderConfig:
+		return v.(*ProviderConfig).Name
 	}
 	return v
 }
