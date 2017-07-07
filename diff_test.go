@@ -17,7 +17,6 @@ limitations under the License.
 package core
 
 import (
-	"fmt"
 	"github.com/ankyra/escape-core/templates"
 	"github.com/ankyra/escape-core/variables"
 	. "gopkg.in/check.v1"
@@ -26,15 +25,15 @@ import (
 
 func (s *metadataSuite) Test_Diff_simple_types(c *C) {
 	testCases := [][]interface{}{
-		[]interface{}{"ApiVersion", 1, 2},
-		[]interface{}{"Branch", "test", "not-test"},
-		[]interface{}{"Description", "test", "not-test"},
-		[]interface{}{"Logo", "test", "not-test"},
-		[]interface{}{"Name", "test", "not-test"},
-		[]interface{}{"Project", "test", "not-test"},
-		[]interface{}{"Revision", "test", "not-test"},
-		[]interface{}{"Version", "1.0", "1.0.0"},
-		[]interface{}{"Repository", "test", "not-test"},
+		[]interface{}{"ApiVersion", 1, 2, `Change ApiVersion from '1' to '2'`},
+		[]interface{}{"Branch", "test", "not-test", `Change Branch from 'test' to 'not-test'`},
+		[]interface{}{"Description", "test", "not-test", `Change Description from 'test' to 'not-test'`},
+		[]interface{}{"Logo", "test", "not-test", `Change Logo from 'test' to 'not-test'`},
+		[]interface{}{"Name", "test", "not-test", `Change Name from 'test' to 'not-test'`},
+		[]interface{}{"Project", "test", "not-test", `Change Project from 'test' to 'not-test'`},
+		[]interface{}{"Revision", "test", "not-test", `Change Revision from 'test' to 'not-test'`},
+		[]interface{}{"Version", "1.0", "1.0.0", `Change Version from '1.0' to '1.0.0'`},
+		[]interface{}{"Repository", "test", "not-test", `Change Repository from 'test' to 'not-test'`},
 	}
 	for _, test := range testCases {
 		m1 := NewReleaseMetadata("test", "1.0")
@@ -49,9 +48,7 @@ func (s *metadataSuite) Test_Diff_simple_types(c *C) {
 		changes := Diff(m1, m2)
 		c.Assert(changes, HasLen, 1, Commentf("Field %s", test[0]))
 		c.Assert(changes[0].Field, DeepEquals, test[0])
-		c.Assert(changes[0].PreviousValue, DeepEquals, test[1], Commentf("Field %s", test[0]))
-		c.Assert(changes[0].NewValue, DeepEquals, test[2], Commentf("Field %s", test[0]))
-		c.Assert(changes[0].ToString(), Equals, fmt.Sprintf("Change %s from '%s' to '%s'", test[0], test[1], test[2]), Commentf("Field %s", test[0]))
+		c.Assert(changes[0].ToString(), Equals, test[3], Commentf("Field %s", test[0]))
 	}
 }
 
