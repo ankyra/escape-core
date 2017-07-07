@@ -292,24 +292,34 @@ func (s *metadataSuite) Test_Diff_Slices(c *C) {
 		[]interface{}{"Provides", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Provides"}, "test", ""},
 		[]interface{}{"Provides", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Provides"}, "", "test"},
 		[]interface{}{"Provides", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Provides[0]"}, "test", "kubernetes"},
+
+		[]interface{}{"Depends", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Depends"}, "test", ""},
+		[]interface{}{"Depends", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Depends"}, "", "test"},
+		[]interface{}{"Depends", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Depends[0]"}, "test", "kubernetes"},
+
+		[]interface{}{"Extends", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Extends"}, "test", ""},
+		[]interface{}{"Extends", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Extends"}, "", "test"},
+		[]interface{}{"Extends", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Extends[0]"}, "test", "kubernetes"},
 	}
 	for _, test := range testCases {
 		m1 := NewReleaseMetadata("test", "1.0")
 		m2 := NewReleaseMetadata("test", "1.0")
 		typ := test[0].(string)
 		if typ == "Consumes" {
-			for _, consumer := range test[1].([]string) {
-				m1.AddConsumes(consumer)
-			}
-			for _, consumer := range test[2].([]string) {
-				m2.AddConsumes(consumer)
-			}
+			m1.SetConsumes(test[1].([]string))
+			m2.SetConsumes(test[2].([]string))
 		} else if typ == "Provides" {
+			m1.SetProvides(test[1].([]string))
+			m2.SetProvides(test[2].([]string))
+		} else if typ == "Depends" {
+			m1.SetDependencies(test[1].([]string))
+			m2.SetDependencies(test[2].([]string))
+		} else if typ == "Extends" {
 			for _, consumer := range test[1].([]string) {
-				m1.AddProvides(consumer)
+				m1.AddExtension(consumer)
 			}
 			for _, consumer := range test[2].([]string) {
-				m2.AddProvides(consumer)
+				m2.AddExtension(consumer)
 			}
 		}
 		expected := test[3].(Change)

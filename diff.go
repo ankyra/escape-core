@@ -206,6 +206,10 @@ func diffValue(v interface{}) interface{} {
 		return v.(*ConsumerConfig).Name
 	case *ProviderConfig:
 		return v.(*ProviderConfig).Name
+	case *DependencyConfig:
+		return v.(*DependencyConfig).ReleaseId
+	case *ExtensionConfig:
+		return v.(*ExtensionConfig).ReleaseId
 	}
 	return v
 }
