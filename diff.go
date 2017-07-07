@@ -19,6 +19,7 @@ package core
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 type Change struct {
@@ -48,10 +49,13 @@ func Diff(this *ReleaseMetadata, other *ReleaseMetadata) Changes {
 }
 
 func diff(name string, oldValue, newValue interface{}) Changes {
+	if changes := diffNil(name, oldValue, newValue); len(changes) != 0 || oldValue == nil {
+		return changes
+	}
 	thisVal := reflect.ValueOf(oldValue)
 	typ := thisVal.Type().String()
 	kind := thisVal.Type().Kind().String()
-	if typ == "int" || typ == "string" {
+	if typ == "int" || typ == "string" || typ == "bool" {
 		if r := diffSimpleType(name, oldValue, newValue); r != nil {
 			return []Change{*r}
 		}
@@ -78,14 +82,17 @@ func diffStruct(name string, oldValue, newValue interface{}) Changes {
 		field := oldVal.Type().Field(i).Name
 		oldValue := oldVal.Field(i).Interface()
 		newValue := newVal.FieldByName(field).Interface()
-		newName := name + " field " + field
+		newName := name + "." + field
 		if oldVal.NumField() == 1 {
 			newName = name
 		}
+		fmt.Printf("Diffing %s %v -> %v\n", newName, oldValue, newValue)
 		for _, change := range diff(newName, oldValue, newValue) {
+			fmt.Printf("%v\n", change)
 			result = append(result, change)
 		}
 	}
+	fmt.Printf("%v\n", result)
 	return result
 }
 
@@ -107,7 +114,7 @@ func diffMap(name string, oldValue, newValue interface{}) []Change {
 	for _, key := range oldMap.MapKeys() {
 		oldVal := oldMap.MapIndex(key).Interface()
 		newVal := newMap.MapIndex(key)
-		field := fmt.Sprintf("%s field '%s'", name, key)
+		field := fmt.Sprintf(`%s["%s"]`, name, key)
 		if !newVal.IsValid() {
 			changes = append(changes, Change{field, diffValue(oldVal), nil, false, true})
 			continue
@@ -124,7 +131,7 @@ func diffMap(name string, oldValue, newValue interface{}) []Change {
 		oldVal := oldMap.MapIndex(key)
 		newVal := newMap.MapIndex(key).Interface()
 		if !oldVal.IsValid() {
-			field := fmt.Sprintf("%s field '%s'", name, key)
+			field := fmt.Sprintf(`%s["%s"]`, name, key)
 			changes = append(changes, Change{field, nil, diffValue(newVal), true, false})
 		} else {
 			fmt.Printf("%s didn't change %v\n", key, oldVal)
@@ -133,13 +140,35 @@ func diffMap(name string, oldValue, newValue interface{}) []Change {
 	return changes
 }
 func diffSlice(name string, oldValue, newValue interface{}) []Change {
+	changes := []Change{}
 	if reflect.DeepEqual(oldValue, newValue) {
 		return nil
 	}
-	return nil
+	oldVal := reflect.ValueOf(oldValue)
+	oldValLen := oldVal.Len()
+	newVal := reflect.ValueOf(newValue)
+	newValLen := newVal.Len()
+	until := oldValLen
+	if newValLen > oldValLen {
+		until = newValLen
+	}
+	for ix := 0; ix < until; ix++ {
+		if ix >= oldValLen {
+			changes = append(changes, Change{name, nil, diffValue(newVal.Index(ix).Interface()), true, false})
+			continue
+		} else if ix >= newValLen {
+			changes = append(changes, Change{name, diffValue(oldVal.Index(ix).Interface()), nil, false, true})
+			continue
+		}
+		for _, change := range diff(name+"["+strconv.Itoa(ix)+"]", oldVal.Index(ix).Interface(), newVal.Index(ix).Interface()) {
+			changes = append(changes, change)
+		}
+
+	}
+	return changes
 }
 
-func diffPointer(name string, oldValue, newValue interface{}) []Change {
+func diffNil(name string, oldValue, newValue interface{}) []Change {
 	changes := []Change{}
 	if oldValue == nil {
 		if newValue == nil {
@@ -151,6 +180,13 @@ func diffPointer(name string, oldValue, newValue interface{}) []Change {
 	} else if newValue == nil {
 		v := reflect.Indirect(reflect.ValueOf(oldValue)).Interface()
 		changes = append(changes, Change{name, diffValue(v), nil, true, false})
+	}
+	return changes
+}
+
+func diffPointer(name string, oldValue, newValue interface{}) []Change {
+	if changes := diffNil(name, oldValue, newValue); len(changes) != 0 {
+		return changes
 	}
 	oldVal := reflect.Indirect(reflect.ValueOf(oldValue)).Interface()
 	newVal := reflect.Indirect(reflect.ValueOf(newValue)).Interface()

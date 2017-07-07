@@ -17,6 +17,7 @@ limitations under the License.
 package core
 
 import (
+	"github.com/ankyra/escape-core/variables"
 	. "gopkg.in/check.v1"
 	"reflect"
 )
@@ -86,7 +87,7 @@ func (s *metadataSuite) Test_Diff_maps(c *C) {
 		expected := test[3].(Change)
 		changes := Diff(m1, m2)
 		c.Assert(changes, HasLen, 1, Commentf("Field %s %v %v", test[0], expected.Removed, expected.Added))
-		c.Assert(changes[0].Field, DeepEquals, test[0].(string)+" field 'newfile.txt'")
+		c.Assert(changes[0].Field, DeepEquals, test[0].(string)+`["newfile.txt"]`)
 		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
 		c.Assert(changes[0].Added, DeepEquals, expected.Added)
 		if !expected.Removed {
@@ -124,7 +125,7 @@ func (s *metadataSuite) Test_Diff_Stages(c *C) {
 		expected := test[2].(Change)
 		changes := Diff(m1, m2)
 		c.Assert(changes, HasLen, 1, Commentf("Field Stages"))
-		c.Assert(changes[0].Field, DeepEquals, "Stages field 'test'")
+		c.Assert(changes[0].Field, DeepEquals, `Stages["test"]`)
 		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
 		c.Assert(changes[0].Added, DeepEquals, expected.Added)
 		if !expected.Added {
@@ -149,8 +150,8 @@ func (s *metadataSuite) Test_Diff_Errands(c *C) {
 	}
 
 	testCases := [][]interface{}{
-		[]interface{}{errand1, errand2, Change{Removed: false, Added: false, Field: "Errands field 'test' field Script"}, "test.sh", "test2.sh"},
-		[]interface{}{errand1, errand3, Change{Removed: false, Added: false, Field: "Errands field 'test' field Description"}, "", "Description"},
+		[]interface{}{errand1, errand2, Change{Removed: false, Added: false, Field: `Errands["test"].Script`}, "test.sh", "test2.sh"},
+		[]interface{}{errand1, errand3, Change{Removed: false, Added: false, Field: `Errands["test"].Description`}, "", "Description"},
 	}
 	for _, test := range testCases {
 		m1 := NewReleaseMetadata("test", "1.0")
@@ -174,6 +175,110 @@ func (s *metadataSuite) Test_Diff_Errands(c *C) {
 		}
 		if !expected.Removed {
 			c.Assert(changes[0].NewValue, DeepEquals, test[4], Commentf("Field %s", expected.Field))
+		}
+	}
+}
+
+func (s *metadataSuite) Test_Diff_Variables(c *C) {
+	empty := []map[interface{}]interface{}{}
+	var1 := []map[interface{}]interface{}{
+		map[interface{}]interface{}{
+			"id": "test",
+		},
+	}
+	var2 := []map[interface{}]interface{}{
+		map[interface{}]interface{}{
+			"id": "test2",
+		},
+	}
+	var3 := []map[interface{}]interface{}{
+		map[interface{}]interface{}{
+			"id":   "test",
+			"type": "integer",
+		},
+	}
+	var4 := []map[interface{}]interface{}{
+		map[interface{}]interface{}{
+			"id": "test2",
+		},
+		map[interface{}]interface{}{
+			"id": "test",
+		},
+	}
+	v1, err := variables.NewVariableFromDict(var1[0])
+	c.Assert(err, IsNil)
+
+	testCases := [][]interface{}{
+		[]interface{}{"Inputs", var1, var2, Change{Removed: false, Added: false, Field: "Inputs[0].Id"}, "test", "test2"},
+		[]interface{}{"Inputs", var1, var3, Change{Removed: false, Added: false, Field: "Inputs[0].Type"}, "string", "integer"},
+		[]interface{}{"Inputs", var1, empty, Change{Removed: true, Added: false, Field: "Inputs"}, v1, "integer"},
+		[]interface{}{"Inputs", empty, var1, Change{Removed: false, Added: true, Field: "Inputs"}, nil, v1},
+		[]interface{}{"Inputs", var4, var2, Change{Removed: true, Added: false, Field: "Inputs"}, v1, nil},
+		[]interface{}{"Inputs", var2, var4, Change{Removed: false, Added: true, Field: "Inputs"}, nil, v1},
+
+		[]interface{}{"Outputs", var1, var2, Change{Removed: false, Added: false, Field: "Outputs[0].Id"}, "test", "test2"},
+		[]interface{}{"Outputs", var1, var3, Change{Removed: false, Added: false, Field: "Outputs[0].Type"}, "string", "integer"},
+		[]interface{}{"Outputs", var1, empty, Change{Removed: true, Added: false, Field: "Outputs"}, v1, "integer"},
+		[]interface{}{"Outputs", empty, var1, Change{Removed: false, Added: true, Field: "Outputs"}, nil, v1},
+		[]interface{}{"Outputs", var4, var2, Change{Removed: true, Added: false, Field: "Outputs"}, v1, nil},
+		[]interface{}{"Outputs", var2, var4, Change{Removed: false, Added: true, Field: "Outputs"}, nil, v1},
+
+		[]interface{}{"Errands", var1, var2, Change{Removed: false, Added: false, Field: `Errands["test"].Inputs[0].Id`}, "test", "test2"},
+		[]interface{}{"Errands", var1, var3, Change{Removed: false, Added: false, Field: `Errands["test"].Inputs[0].Type`}, "string", "integer"},
+		[]interface{}{"Errands", var1, empty, Change{Removed: true, Added: false, Field: `Errands["test"].Inputs`}, v1, "integer"},
+		[]interface{}{"Errands", empty, var1, Change{Removed: false, Added: true, Field: `Errands["test"].Inputs`}, nil, v1},
+		[]interface{}{"Errands", var4, var2, Change{Removed: true, Added: false, Field: `Errands["test"].Inputs`}, v1, nil},
+		[]interface{}{"Errands", var2, var4, Change{Removed: false, Added: true, Field: `Errands["test"].Inputs`}, nil, v1},
+	}
+	for _, test := range testCases {
+		errand1, err := NewErrandFromDict("test", map[interface{}]interface{}{
+			"script": "test.sh",
+		})
+		c.Assert(err, IsNil)
+		errand2, err := NewErrandFromDict("test", map[interface{}]interface{}{
+			"script": "test.sh",
+		})
+		c.Assert(err, IsNil)
+		m1 := NewReleaseMetadata("test", "1.0")
+		m2 := NewReleaseMetadata("test", "1.0")
+		m1.Errands["test"] = errand1
+		m2.Errands["test"] = errand2
+		typ := test[0].(string)
+		for _, varDict := range test[1].([]map[interface{}]interface{}) {
+			v, err := variables.NewVariableFromDict(varDict)
+			c.Assert(err, IsNil)
+			if typ == "Inputs" {
+				m1.AddInputVariable(v)
+			} else if typ == "Outputs" {
+				m1.AddOutputVariable(v)
+			} else {
+				errand1.Inputs = append(errand1.Inputs, v)
+			}
+		}
+		for _, varDict := range test[2].([]map[interface{}]interface{}) {
+			v, err := variables.NewVariableFromDict(varDict)
+			c.Assert(err, IsNil)
+			if typ == "Inputs" {
+				m2.AddInputVariable(v)
+			} else if typ == "Outputs" {
+				m2.AddOutputVariable(v)
+			} else {
+				errand2.Inputs = append(errand2.Inputs, v)
+			}
+		}
+
+		expected := test[3].(Change)
+		expectedField := expected.Field
+		changes := Diff(m1, m2)
+		c.Assert(changes, HasLen, 1, Commentf(expectedField))
+		c.Assert(changes[0].Field, DeepEquals, expectedField)
+		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
+		c.Assert(changes[0].Added, DeepEquals, expected.Added, Commentf(expectedField))
+		if !expected.Added {
+			c.Assert(changes[0].PreviousValue, DeepEquals, test[4], Commentf("Field %s", expectedField))
+		}
+		if !expected.Removed {
+			c.Assert(changes[0].NewValue, DeepEquals, test[5], Commentf("Field %s", expectedField))
 		}
 	}
 }
