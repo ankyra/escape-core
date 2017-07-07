@@ -17,6 +17,7 @@ limitations under the License.
 package core
 
 import (
+	"fmt"
 	"github.com/ankyra/escape-core/templates"
 	"github.com/ankyra/escape-core/variables"
 	. "gopkg.in/check.v1"
@@ -49,7 +50,8 @@ func (s *metadataSuite) Test_Diff_simple_types(c *C) {
 		c.Assert(changes, HasLen, 1, Commentf("Field %s", test[0]))
 		c.Assert(changes[0].Field, DeepEquals, test[0])
 		c.Assert(changes[0].PreviousValue, DeepEquals, test[1], Commentf("Field %s", test[0]))
-		c.Assert(changes[0].NewValue, DeepEquals, test[2], Commentf("Field %s", test[1]))
+		c.Assert(changes[0].NewValue, DeepEquals, test[2], Commentf("Field %s", test[0]))
+		c.Assert(changes[0].ToString(), Equals, fmt.Sprintf("Change %s from '%s' to '%s'", test[0], test[1], test[2]), Commentf("Field %s", test[0]))
 	}
 }
 
@@ -63,17 +65,17 @@ func (s *metadataSuite) Test_Diff_maps(c *C) {
 	}
 	testCases := [][]interface{}{
 
-		[]interface{}{"Files", oldDict, newDict, Change{Removed: false, Added: false}},
-		[]interface{}{"Files", emptyDict, newDict, Change{Removed: false, Added: true}},
-		[]interface{}{"Files", oldDict, emptyDict, Change{Removed: true, Added: false}},
+		[]interface{}{"Files", oldDict, newDict, `Change Files["newfile.txt"] from '123' to '123123123'`},
+		[]interface{}{"Files", emptyDict, newDict, `Add 'newfile.txt' to Files`},
+		[]interface{}{"Files", oldDict, emptyDict, `Remove 'newfile.txt' from Files`},
 
-		[]interface{}{"Metadata", oldDict, newDict, Change{Removed: false, Added: false}},
-		[]interface{}{"Metadata", emptyDict, newDict, Change{Removed: false, Added: true}},
-		[]interface{}{"Metadata", oldDict, emptyDict, Change{Removed: true, Added: false}},
+		[]interface{}{"Metadata", oldDict, newDict, `Change Metadata["newfile.txt"] from '123' to '123123123'`},
+		[]interface{}{"Metadata", emptyDict, newDict, `Add 'newfile.txt' to Metadata`},
+		[]interface{}{"Metadata", oldDict, emptyDict, `Remove 'newfile.txt' from Metadata`},
 
-		[]interface{}{"VariableCtx", oldDict, newDict, Change{Removed: false, Added: false}},
-		[]interface{}{"VariableCtx", emptyDict, newDict, Change{Removed: false, Added: true}},
-		[]interface{}{"VariableCtx", oldDict, emptyDict, Change{Removed: true, Added: false}},
+		[]interface{}{"VariableCtx", oldDict, newDict, `Change VariableCtx["newfile.txt"] from '123' to '123123123'`},
+		[]interface{}{"VariableCtx", emptyDict, newDict, `Add 'newfile.txt' to VariableCtx`},
+		[]interface{}{"VariableCtx", oldDict, emptyDict, `Remove 'newfile.txt' from VariableCtx`},
 	}
 	for _, test := range testCases {
 		m1 := NewReleaseMetadata("test", "1.0")
@@ -85,18 +87,9 @@ func (s *metadataSuite) Test_Diff_maps(c *C) {
 		thisVal.FieldByName(test[0].(string)).Set(reflect.ValueOf(test[1]))
 		otherVal.FieldByName(test[0].(string)).Set(reflect.ValueOf(test[2]))
 
-		expected := test[3].(Change)
 		changes := Diff(m1, m2)
-		c.Assert(changes, HasLen, 1, Commentf("Field %s %v %v", test[0], expected.Removed, expected.Added))
-		c.Assert(changes[0].Field, DeepEquals, test[0].(string)+`["newfile.txt"]`)
-		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
-		c.Assert(changes[0].Added, DeepEquals, expected.Added)
-		if !expected.Removed {
-			c.Assert(changes[0].NewValue, DeepEquals, "123123123", Commentf("Field %s", test[0]))
-		}
-		if !expected.Added {
-			c.Assert(changes[0].PreviousValue, DeepEquals, "123", Commentf("Field %s", test[0]))
-		}
+		c.Assert(changes, HasLen, 1, Commentf(test[3].(string)))
+		c.Assert(changes[0].ToString(), DeepEquals, test[3])
 	}
 }
 
@@ -109,32 +102,19 @@ func (s *metadataSuite) Test_Diff_Stages(c *C) {
 		"test": &ExecStage{Script: "test2.sh"},
 	}
 	testCases := [][]interface{}{
-		[]interface{}{oldDict, newDict, Change{Removed: false, Added: false}},
-		[]interface{}{emptyDict, newDict, Change{Removed: false, Added: true}},
-		[]interface{}{oldDict, emptyDict, Change{Removed: true, Added: false}},
+		[]interface{}{oldDict, newDict, `Change Stages["test"] from 'test.sh' to 'test2.sh'`},
+		[]interface{}{emptyDict, newDict, `Add 'test' to Stages`},
+		[]interface{}{oldDict, emptyDict, `Remove 'test' from Stages`},
 	}
 	for _, test := range testCases {
 		m1 := NewReleaseMetadata("test", "1.0")
 		m2 := NewReleaseMetadata("test", "1.0")
+		m1.Stages = test[0].(map[string]*ExecStage)
+		m2.Stages = test[1].(map[string]*ExecStage)
 
-		thisVal := reflect.Indirect(reflect.ValueOf(m1))
-		otherVal := reflect.Indirect(reflect.ValueOf(m2))
-
-		thisVal.FieldByName("Stages").Set(reflect.ValueOf(test[0]))
-		otherVal.FieldByName("Stages").Set(reflect.ValueOf(test[1]))
-
-		expected := test[2].(Change)
 		changes := Diff(m1, m2)
-		c.Assert(changes, HasLen, 1, Commentf("Field Stages"))
-		c.Assert(changes[0].Field, DeepEquals, `Stages["test"]`)
-		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
-		c.Assert(changes[0].Added, DeepEquals, expected.Added)
-		if !expected.Added {
-			c.Assert(changes[0].PreviousValue, DeepEquals, "test.sh")
-		}
-		if !expected.Removed {
-			c.Assert(changes[0].NewValue, DeepEquals, "test2.sh")
-		}
+		c.Assert(changes, HasLen, 1, Commentf(test[2].(string)))
+		c.Assert(changes[0].ToString(), DeepEquals, test[2])
 	}
 }
 
@@ -151,32 +131,28 @@ func (s *metadataSuite) Test_Diff_Errands(c *C) {
 	}
 
 	testCases := [][]interface{}{
-		[]interface{}{errand1, errand2, Change{Removed: false, Added: false, Field: `Errands["test"].Script`}, "test.sh", "test2.sh"},
-		[]interface{}{errand1, errand3, Change{Removed: false, Added: false, Field: `Errands["test"].Description`}, "", "Description"},
+		[]interface{}{errand1, errand2, `Change Errands["test"].Script from 'test.sh' to 'test2.sh'`},
+		[]interface{}{errand1, errand3, `Change Errands["test"].Description from '' to 'Description'`},
+		[]interface{}{nil, errand1, `Add 'test' to Errands`},
+		[]interface{}{errand1, nil, `Remove 'test' from Errands`},
 	}
 	for _, test := range testCases {
 		m1 := NewReleaseMetadata("test", "1.0")
 		m2 := NewReleaseMetadata("test", "1.0")
 
-		e1, err := NewErrandFromDict("test", test[0].(map[interface{}]interface{}))
-		e2, err2 := NewErrandFromDict("test", test[1].(map[interface{}]interface{}))
-		c.Assert(err, IsNil)
-		c.Assert(err2, IsNil)
-		m1.Errands["test"] = e1
-		m2.Errands["test"] = e2
-
-		expected := test[2].(Change)
+		if test[0] != nil {
+			e1, err := NewErrandFromDict("test", test[0].(map[interface{}]interface{}))
+			c.Assert(err, IsNil)
+			m1.Errands["test"] = e1
+		}
+		if test[1] != nil {
+			e2, err2 := NewErrandFromDict("test", test[1].(map[interface{}]interface{}))
+			c.Assert(err2, IsNil)
+			m2.Errands["test"] = e2
+		}
 		changes := Diff(m1, m2)
-		c.Assert(changes, HasLen, 1, Commentf("Field %s", test[0]))
-		c.Assert(changes[0].Field, DeepEquals, expected.Field)
-		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
-		c.Assert(changes[0].Added, DeepEquals, expected.Added, Commentf(expected.Field))
-		if !expected.Added {
-			c.Assert(changes[0].PreviousValue, DeepEquals, test[3], Commentf("Field %s", expected.Field))
-		}
-		if !expected.Removed {
-			c.Assert(changes[0].NewValue, DeepEquals, test[4], Commentf("Field %s", expected.Field))
-		}
+		c.Assert(changes, HasLen, 1, Commentf(test[2].(string)))
+		c.Assert(changes[0].ToString(), DeepEquals, test[2])
 	}
 }
 
@@ -206,30 +182,28 @@ func (s *metadataSuite) Test_Diff_Variables(c *C) {
 			"id": "test",
 		},
 	}
-	v1, err := variables.NewVariableFromDict(var1[0])
-	c.Assert(err, IsNil)
 
 	testCases := [][]interface{}{
-		[]interface{}{"Inputs", var1, var2, Change{Removed: false, Added: false, Field: "Inputs[0].Id"}, "test", "test2"},
-		[]interface{}{"Inputs", var1, var3, Change{Removed: false, Added: false, Field: "Inputs[0].Type"}, "string", "integer"},
-		[]interface{}{"Inputs", var1, empty, Change{Removed: true, Added: false, Field: "Inputs"}, v1, "integer"},
-		[]interface{}{"Inputs", empty, var1, Change{Removed: false, Added: true, Field: "Inputs"}, nil, v1},
-		[]interface{}{"Inputs", var4, var2, Change{Removed: true, Added: false, Field: "Inputs"}, v1, nil},
-		[]interface{}{"Inputs", var2, var4, Change{Removed: false, Added: true, Field: "Inputs"}, nil, v1},
+		[]interface{}{"Inputs", var1, var2, `Change Inputs[0].Id from 'test' to 'test2'`},
+		[]interface{}{"Inputs", var1, var3, `Change Inputs[0].Type from 'string' to 'integer'`},
+		[]interface{}{"Inputs", var1, empty, `Remove 'test' from Inputs`},
+		[]interface{}{"Inputs", empty, var1, `Add 'test' to Inputs`},
+		[]interface{}{"Inputs", var4, var2, `Remove 'test' from Inputs`},
+		[]interface{}{"Inputs", var2, var4, `Add 'test' to Inputs`},
 
-		[]interface{}{"Outputs", var1, var2, Change{Removed: false, Added: false, Field: "Outputs[0].Id"}, "test", "test2"},
-		[]interface{}{"Outputs", var1, var3, Change{Removed: false, Added: false, Field: "Outputs[0].Type"}, "string", "integer"},
-		[]interface{}{"Outputs", var1, empty, Change{Removed: true, Added: false, Field: "Outputs"}, v1, "integer"},
-		[]interface{}{"Outputs", empty, var1, Change{Removed: false, Added: true, Field: "Outputs"}, nil, v1},
-		[]interface{}{"Outputs", var4, var2, Change{Removed: true, Added: false, Field: "Outputs"}, v1, nil},
-		[]interface{}{"Outputs", var2, var4, Change{Removed: false, Added: true, Field: "Outputs"}, nil, v1},
+		[]interface{}{"Outputs", var1, var2, `Change Outputs[0].Id from 'test' to 'test2'`},
+		[]interface{}{"Outputs", var1, var3, `Change Outputs[0].Type from 'string' to 'integer'`},
+		[]interface{}{"Outputs", var1, empty, `Remove 'test' from Outputs`},
+		[]interface{}{"Outputs", empty, var1, `Add 'test' to Outputs`},
+		[]interface{}{"Outputs", var4, var2, `Remove 'test' from Outputs`},
+		[]interface{}{"Outputs", var2, var4, `Add 'test' to Outputs`},
 
-		[]interface{}{"Errands", var1, var2, Change{Removed: false, Added: false, Field: `Errands["test"].Inputs[0].Id`}, "test", "test2"},
-		[]interface{}{"Errands", var1, var3, Change{Removed: false, Added: false, Field: `Errands["test"].Inputs[0].Type`}, "string", "integer"},
-		[]interface{}{"Errands", var1, empty, Change{Removed: true, Added: false, Field: `Errands["test"].Inputs`}, v1, "integer"},
-		[]interface{}{"Errands", empty, var1, Change{Removed: false, Added: true, Field: `Errands["test"].Inputs`}, nil, v1},
-		[]interface{}{"Errands", var4, var2, Change{Removed: true, Added: false, Field: `Errands["test"].Inputs`}, v1, nil},
-		[]interface{}{"Errands", var2, var4, Change{Removed: false, Added: true, Field: `Errands["test"].Inputs`}, nil, v1},
+		[]interface{}{"Errands", var1, var2, `Change Errands["test"].Inputs[0].Id from 'test' to 'test2'`},
+		[]interface{}{"Errands", var1, var3, `Change Errands["test"].Inputs[0].Type from 'string' to 'integer'`},
+		[]interface{}{"Errands", var1, empty, `Remove 'test' from Errands["test"].Inputs`},
+		[]interface{}{"Errands", empty, var1, `Add 'test' to Errands["test"].Inputs`},
+		[]interface{}{"Errands", var4, var2, `Remove 'test' from Errands["test"].Inputs`},
+		[]interface{}{"Errands", var2, var4, `Add 'test' to Errands["test"].Inputs`},
 	}
 	for _, test := range testCases {
 		errand1, err := NewErrandFromDict("test", map[interface{}]interface{}{
@@ -268,39 +242,29 @@ func (s *metadataSuite) Test_Diff_Variables(c *C) {
 			}
 		}
 
-		expected := test[3].(Change)
-		expectedField := expected.Field
 		changes := Diff(m1, m2)
-		c.Assert(changes, HasLen, 1, Commentf(expectedField))
-		c.Assert(changes[0].Field, DeepEquals, expectedField)
-		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
-		c.Assert(changes[0].Added, DeepEquals, expected.Added, Commentf(expectedField))
-		if !expected.Added {
-			c.Assert(changes[0].PreviousValue, DeepEquals, test[4], Commentf("Field %s", expectedField))
-		}
-		if !expected.Removed {
-			c.Assert(changes[0].NewValue, DeepEquals, test[5], Commentf("Field %s", expectedField))
-		}
+		c.Assert(changes, HasLen, 1, Commentf(test[3].(string)))
+		c.Assert(changes[0].ToString(), DeepEquals, test[3])
 	}
 }
 
 func (s *metadataSuite) Test_Diff_Slices(c *C) {
 	testCases := [][]interface{}{
-		[]interface{}{"Consumes", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Consumes"}, "test", ""},
-		[]interface{}{"Consumes", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Consumes"}, "", "test"},
-		[]interface{}{"Consumes", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Consumes[0]"}, "test", "kubernetes"},
+		[]interface{}{"Consumes", []string{"test"}, []string{}, `Remove 'test' from Consumes`},
+		[]interface{}{"Consumes", []string{}, []string{"test"}, `Add 'test' to Consumes`},
+		[]interface{}{"Consumes", []string{"test"}, []string{"kubernetes"}, `Change Consumes[0] from 'test' to 'kubernetes'`},
 
-		[]interface{}{"Provides", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Provides"}, "test", ""},
-		[]interface{}{"Provides", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Provides"}, "", "test"},
-		[]interface{}{"Provides", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Provides[0]"}, "test", "kubernetes"},
+		[]interface{}{"Provides", []string{"test"}, []string{}, `Remove 'test' from Provides`},
+		[]interface{}{"Provides", []string{}, []string{"test"}, `Add 'test' to Provides`},
+		[]interface{}{"Provides", []string{"test"}, []string{"kubernetes"}, `Change Provides[0] from 'test' to 'kubernetes'`},
 
-		[]interface{}{"Depends", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Depends"}, "test", ""},
-		[]interface{}{"Depends", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Depends"}, "", "test"},
-		[]interface{}{"Depends", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Depends[0]"}, "test", "kubernetes"},
+		[]interface{}{"Depends", []string{"test"}, []string{}, `Remove 'test' from Depends`},
+		[]interface{}{"Depends", []string{}, []string{"test"}, `Add 'test' to Depends`},
+		[]interface{}{"Depends", []string{"test"}, []string{"kubernetes"}, `Change Depends[0] from 'test' to 'kubernetes'`},
 
-		[]interface{}{"Extends", []string{"test"}, []string{}, Change{Removed: true, Added: false, Field: "Extends"}, "test", ""},
-		[]interface{}{"Extends", []string{}, []string{"test"}, Change{Removed: false, Added: true, Field: "Extends"}, "", "test"},
-		[]interface{}{"Extends", []string{"test"}, []string{"kubernetes"}, Change{Removed: false, Added: false, Field: "Extends[0]"}, "test", "kubernetes"},
+		[]interface{}{"Extends", []string{"test"}, []string{}, `Remove 'test' from Extends`},
+		[]interface{}{"Extends", []string{}, []string{"test"}, `Add 'test' to Extends`},
+		[]interface{}{"Extends", []string{"test"}, []string{"kubernetes"}, `Change Extends[0] from 'test' to 'kubernetes'`},
 	}
 	for _, test := range testCases {
 		m1 := NewReleaseMetadata("test", "1.0")
@@ -323,19 +287,9 @@ func (s *metadataSuite) Test_Diff_Slices(c *C) {
 				m2.AddExtension(consumer)
 			}
 		}
-		expected := test[3].(Change)
-		expectedField := expected.Field
 		changes := Diff(m1, m2)
-		c.Assert(changes, HasLen, 1, Commentf(expectedField))
-		c.Assert(changes[0].Field, DeepEquals, expectedField)
-		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
-		c.Assert(changes[0].Added, DeepEquals, expected.Added, Commentf(expectedField))
-		if !expected.Added {
-			c.Assert(changes[0].PreviousValue, DeepEquals, test[4], Commentf("Field %s", expectedField))
-		}
-		if !expected.Removed {
-			c.Assert(changes[0].NewValue, DeepEquals, test[5], Commentf("Field %s", expectedField))
-		}
+		c.Assert(changes, HasLen, 1, Commentf(test[3].(string)))
+		c.Assert(changes[0].ToString(), DeepEquals, test[3])
 	}
 }
 
@@ -353,31 +307,28 @@ func (s *metadataSuite) Test_Diff_Templates(c *C) {
 		"target": "/other",
 	}
 	testCases := [][]interface{}{
-		[]interface{}{v1, v2, Change{Removed: false, Added: false, Field: `Templates[0].File`}, "test.tpl", "test2.tpl"},
-		[]interface{}{v1, v3, Change{Removed: false, Added: false, Field: `Templates[0].Target`}, "test.sh", "/other"},
+		[]interface{}{v1, v2, `Change Templates[0].File from 'test.tpl' to 'test2.tpl'`},
+		[]interface{}{v1, v3, `Change Templates[0].Target from 'test.sh' to '/other'`},
+		[]interface{}{nil, v1, `Add 'test.tpl' to Templates`},
+		[]interface{}{v1, nil, `Remove 'test.tpl' from Templates`},
 	}
 	for _, test := range testCases {
 		m1 := NewReleaseMetadata("test", "1.0")
 		m2 := NewReleaseMetadata("test", "1.0")
 
-		e1, err := templates.NewTemplateFromInterface(test[0].(map[interface{}]interface{}))
-		e2, err2 := templates.NewTemplateFromInterface(test[1].(map[interface{}]interface{}))
-		c.Assert(err, IsNil)
-		c.Assert(err2, IsNil)
-		m1.Templates = append(m1.Templates, e1)
-		m2.Templates = append(m2.Templates, e2)
+		if test[0] != nil {
+			e1, err := templates.NewTemplateFromInterface(test[0].(map[interface{}]interface{}))
+			c.Assert(err, IsNil)
+			m1.Templates = append(m1.Templates, e1)
+		}
 
-		expected := test[2].(Change)
+		if test[1] != nil {
+			e2, err2 := templates.NewTemplateFromInterface(test[1].(map[interface{}]interface{}))
+			c.Assert(err2, IsNil)
+			m2.Templates = append(m2.Templates, e2)
+		}
 		changes := Diff(m1, m2)
-		c.Assert(changes, HasLen, 1, Commentf(expected.Field))
-		c.Assert(changes[0].Field, DeepEquals, expected.Field)
-		c.Assert(changes[0].Removed, DeepEquals, expected.Removed)
-		c.Assert(changes[0].Added, DeepEquals, expected.Added, Commentf(expected.Field))
-		if !expected.Added {
-			c.Assert(changes[0].PreviousValue, DeepEquals, test[3], Commentf("Field %s", expected.Field))
-		}
-		if !expected.Removed {
-			c.Assert(changes[0].NewValue, DeepEquals, test[4], Commentf("Field %s", expected.Field))
-		}
+		c.Assert(changes, HasLen, 1, Commentf(test[2].(string)))
+		c.Assert(changes[0].ToString(), DeepEquals, test[2])
 	}
 }

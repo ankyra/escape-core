@@ -18,6 +18,8 @@ package core
 
 import (
 	"fmt"
+	"github.com/ankyra/escape-core/templates"
+	"github.com/ankyra/escape-core/variables"
 	"reflect"
 	"strconv"
 )
@@ -30,22 +32,43 @@ type Change struct {
 	Removed       bool
 }
 
+func NewUpdate(field string, old, new interface{}) Change {
+	return Change{
+		Field:         field,
+		PreviousValue: old,
+		NewValue:      new,
+	}
+}
+
+func NewAddition(field string, new interface{}) Change {
+	return Change{
+		Field:    field,
+		NewValue: new,
+		Added:    true,
+	}
+}
+
+func NewRemoval(field string, old interface{}) Change {
+	return Change{
+		Field:         field,
+		PreviousValue: old,
+		Removed:       true,
+	}
+}
+
+func (c Change) ToString() string {
+	if !c.Added && !c.Removed {
+		return fmt.Sprintf("Change %s from '%s' to '%s'", c.Field, c.PreviousValue, c.NewValue)
+	} else if c.Added {
+		return fmt.Sprintf("Add '%s' to %s", c.NewValue, c.Field)
+	}
+	return fmt.Sprintf("Remove '%s' from %s", c.PreviousValue, c.Field)
+}
+
 type Changes []Change
 
 func Diff(this *ReleaseMetadata, other *ReleaseMetadata) Changes {
-	result := []Change{}
-	thisVal := reflect.Indirect(reflect.ValueOf(this))
-	otherVal := reflect.Indirect(reflect.ValueOf(other))
-	fields := thisVal.Type().NumField()
-	for i := 0; i < fields; i++ {
-		name := thisVal.Type().Field(i).Name
-		oldValue := thisVal.Field(i).Interface()
-		newValue := otherVal.FieldByName(name).Interface()
-		for _, change := range diff(name, oldValue, newValue) {
-			result = append(result, change)
-		}
-	}
-	return result
+	return diff("", this, other)
 }
 
 func diff(name string, oldValue, newValue interface{}) Changes {
@@ -68,7 +91,7 @@ func diff(name string, oldValue, newValue interface{}) Changes {
 	} else if kind == "slice" {
 		return diffSlice(name, oldValue, newValue)
 	} else {
-		fmt.Printf("WARN: Undiffable type '%s' (%s) for field '%s'\n", typ, kind, name)
+		panic(fmt.Sprintf("WARN: Undiffable type '%s' (%s) for field '%s'\n", typ, kind, name))
 	}
 	return []Change{}
 }
@@ -83,6 +106,9 @@ func diffStruct(name string, oldValue, newValue interface{}) Changes {
 		oldValue := oldVal.Field(i).Interface()
 		newValue := newVal.FieldByName(field).Interface()
 		newName := name + "." + field
+		if name == "" {
+			newName = field
+		}
 		if oldVal.NumField() == 1 {
 			newName = name
 		}
@@ -95,7 +121,8 @@ func diffStruct(name string, oldValue, newValue interface{}) Changes {
 
 func diffSimpleType(name string, oldValue, newValue interface{}) *Change {
 	if !reflect.DeepEqual(oldValue, newValue) {
-		return &Change{name, oldValue, newValue, false, false}
+		v := NewUpdate(name, oldValue, newValue)
+		return &v
 	}
 	return nil
 }
@@ -111,25 +138,23 @@ func diffMap(name string, oldValue, newValue interface{}) []Change {
 	for _, key := range oldMap.MapKeys() {
 		oldVal := oldMap.MapIndex(key).Interface()
 		newVal := newMap.MapIndex(key)
-		field := fmt.Sprintf(`%s["%s"]`, name, key)
 		if !newVal.IsValid() {
-			changes = append(changes, Change{field, diffValue(oldVal), nil, false, true})
+			changes = append(changes, NewRemoval(name, key))
 			continue
 		}
 		newValI := newVal.Interface()
 		if reflect.DeepEqual(oldVal, newValI) {
 			continue
 		}
+		field := fmt.Sprintf(`%s["%s"]`, name, key)
 		for _, c := range diff(field, oldVal, newValI) {
 			changes = append(changes, c)
 		}
 	}
 	for _, key := range newMap.MapKeys() {
 		oldVal := oldMap.MapIndex(key)
-		newVal := newMap.MapIndex(key).Interface()
 		if !oldVal.IsValid() {
-			field := fmt.Sprintf(`%s["%s"]`, name, key)
-			changes = append(changes, Change{field, nil, diffValue(newVal), true, false})
+			changes = append(changes, NewAddition(name, key))
 		}
 	}
 	return changes
@@ -151,13 +176,13 @@ func diffSlice(name string, oldValue, newValue interface{}) []Change {
 		if ix >= oldValLen {
 			if ix < newValLen {
 				val := newVal.Index(ix).Interface()
-				changes = append(changes, Change{name, nil, diffValue(val), true, false})
+				changes = append(changes, NewAddition(name, diffValue(val)))
 			}
 			continue
 		} else if ix >= newValLen {
 			if ix < oldValLen {
 				val := oldVal.Index(ix).Interface()
-				changes = append(changes, Change{name, diffValue(val), nil, false, true})
+				changes = append(changes, NewRemoval(name, diffValue(val)))
 			}
 			continue
 		} else {
@@ -208,6 +233,10 @@ func diffValue(v interface{}) interface{} {
 		return v.(*DependencyConfig).ReleaseId
 	case *ExtensionConfig:
 		return v.(*ExtensionConfig).ReleaseId
+	case *variables.Variable:
+		return v.(*variables.Variable).Id
+	case *templates.Template:
+		return v.(*templates.Template).File
 	}
 	return v
 }
