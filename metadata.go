@@ -53,61 +53,6 @@ func NewProviderConfig(name string) *ProviderConfig {
 	return &ProviderConfig{name}
 }
 
-type DependencyConfig struct {
-    ReleaseId string                 `json:"release_id",yaml:"release_id"`
-    Mapping   map[string]interface{} `json:"mapping",yaml:"mapping"`
-}
-
-func (d *DependencyConfig) Validate() error {
-	if d.Mapping == nil {
-		d.Mapping = map[string]interface{}{}
-	}
-	return nil
-}
-
-func NewDependencyConfig(releaseId string) *DependencyConfig {
-	return &DependencyConfig{
-		ReleaseId: releaseId,
-		Mapping:   map[string]interface{}{},
-	}
-}
-
-func NewDependencyConfigFromMap(dep map[interface{}]interface{}) (*DependencyConfig, error) {
-    var releaseId string
-    mapping := map[string]interface{}{}
-    for key, val := range dep {
-        keyStr, ok := key.(string)
-        if !ok {
-            return nil, fmt.Errorf("Expecting string key in dependency")
-        }
-        if keyStr == "release_id" {
-            valString, ok := val.(string)
-            if !ok {
-                return nil, fmt.Errorf("Expecting string for dependency 'release_id' got '%T'", val)
-            }
-            releaseId = valString
-        } else if key == "mapping" {
-            valMap, ok := val.(map[interface{}]interface{})
-            if !ok {
-                return nil, fmt.Errorf("Expecting dict for dependency 'mapping' got '%T'", val)
-            }
-            for k, v := range valMap {
-                kStr, ok := k.(string)
-                if !ok {
-                    return nil, fmt.Errorf("Expecting string key in dependency mapping")
-                }
-                mapping[kStr] = v
-            }
-        }
-    }
-    if releaseId == "" {
-        return nil, fmt.Errorf("Missing 'release_id' in dependency")
-    }
-    cfg := NewDependencyConfig(releaseId)
-    cfg.Mapping = mapping
-    return cfg, nil
-}
-
 type ExtensionConfig struct {
 	ReleaseId string `json:"release_id"`
 }
@@ -223,7 +168,7 @@ func validate(m *ReleaseMetadata) error {
 		}
 	}
 	for _, d := range m.Depends {
-		if err := d.Validate(); err != nil {
+		if err := d.Validate(m); err != nil {
 			return err
 		}
 	}

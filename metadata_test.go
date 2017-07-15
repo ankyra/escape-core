@@ -222,27 +222,3 @@ func (s *metadataSuite) Test_FromJson(c *C) {
 	c.Assert(m.GetVariableContext()["base"], Equals, "test-depends-v1")
 	c.Assert(m.GetVariableContext()["test-depends"], Equals, "test-depends-v1")
 }
-
-func (s *metadataSuite) Test_DependencyConfig_Mapping_is_set(c *C) {
-	dep := NewDependencyConfig("my-dependency")
-	dep.Mapping = nil
-	c.Assert(dep.Mapping, IsNil)
-	c.Assert(dep.Validate(), IsNil)
-	c.Assert(dep.Mapping, Not(IsNil))
-	c.Assert(dep.Mapping, HasLen, 0)
-}
-
-func (s *metadataSuite) Test_NewDependencyConfigFromMap(c *C) {
-	dep, err := NewDependencyConfigFromMap(map[interface{}]interface{}{
-        "release_id": "test-latest",
-        "mapping": map[interface{}]interface{}{
-            "input_variable1": "test",
-        },
-    })
-    c.Assert(err, IsNil)
-	c.Assert(dep.ReleaseId, Equals, "test-latest")
-	c.Assert(dep.Validate(), IsNil)
-	c.Assert(dep.Mapping, Not(IsNil))
-	c.Assert(dep.Mapping, HasLen, 1)
-	c.Assert(dep.Mapping["input_variable1"], Equals, "test")
-}
