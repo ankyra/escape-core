@@ -54,8 +54,8 @@ func NewProviderConfig(name string) *ProviderConfig {
 }
 
 type DependencyConfig struct {
-	ReleaseId string                 `json:"release_id"`
-	Mapping   map[string]interface{} `json:"mapping"`
+    ReleaseId string                 `json:"release_id",yaml:"release_id"`
+    Mapping   map[string]interface{} `json:"mapping",yaml:"mapping"`
 }
 
 func (d *DependencyConfig) Validate() error {
