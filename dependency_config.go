@@ -17,27 +17,27 @@ limitations under the License.
 package core
 
 import (
-    "fmt"
+	"fmt"
 )
 
 type DependencyConfig struct {
-    ReleaseId string                 `json:"release_id" yaml:"release_id"`
-    Mapping   map[string]interface{} `json:"mapping" yaml:"mapping"`
+	ReleaseId string                 `json:"release_id" yaml:"release_id"`
+	Mapping   map[string]interface{} `json:"mapping" yaml:"mapping"`
 }
 
 func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	if d.Mapping == nil {
 		d.Mapping = map[string]interface{}{}
 	}
-    for _, input := range m.Inputs {
-        _, alreadySet := d.Mapping[input.Id]
-        if alreadySet {
-            continue
-        }
-        if input.EvalBeforeDependencies {
-            d.Mapping[input.Id] = "$this.inputs." + input.Id
-        }
-    }
+	for _, input := range m.Inputs {
+		_, alreadySet := d.Mapping[input.Id]
+		if alreadySet {
+			continue
+		}
+		if input.EvalBeforeDependencies {
+			d.Mapping[input.Id] = "$this.inputs." + input.Id
+		}
+	}
 	return nil
 }
 
@@ -49,38 +49,37 @@ func NewDependencyConfig(releaseId string) *DependencyConfig {
 }
 
 func NewDependencyConfigFromMap(dep map[interface{}]interface{}) (*DependencyConfig, error) {
-    var releaseId string
-    mapping := map[string]interface{}{}
-    for key, val := range dep {
-        keyStr, ok := key.(string)
-        if !ok {
-            return nil, fmt.Errorf("Expecting string key in dependency")
-        }
-        if keyStr == "release_id" {
-            valString, ok := val.(string)
-            if !ok {
-                return nil, fmt.Errorf("Expecting string for dependency 'release_id' got '%T'", val)
-            }
-            releaseId = valString
-        } else if key == "mapping" {
-            valMap, ok := val.(map[interface{}]interface{})
-            if !ok {
-                return nil, fmt.Errorf("Expecting dict for dependency 'mapping' got '%T'", val)
-            }
-            for k, v := range valMap {
-                kStr, ok := k.(string)
-                if !ok {
-                    return nil, fmt.Errorf("Expecting string key in dependency mapping")
-                }
-                mapping[kStr] = v
-            }
-        }
-    }
-    if releaseId == "" {
-        return nil, fmt.Errorf("Missing 'release_id' in dependency")
-    }
-    cfg := NewDependencyConfig(releaseId)
-    cfg.Mapping = mapping
-    return cfg, nil
+	var releaseId string
+	mapping := map[string]interface{}{}
+	for key, val := range dep {
+		keyStr, ok := key.(string)
+		if !ok {
+			return nil, fmt.Errorf("Expecting string key in dependency")
+		}
+		if keyStr == "release_id" {
+			valString, ok := val.(string)
+			if !ok {
+				return nil, fmt.Errorf("Expecting string for dependency 'release_id' got '%T'", val)
+			}
+			releaseId = valString
+		} else if key == "mapping" {
+			valMap, ok := val.(map[interface{}]interface{})
+			if !ok {
+				return nil, fmt.Errorf("Expecting dict for dependency 'mapping' got '%T'", val)
+			}
+			for k, v := range valMap {
+				kStr, ok := k.(string)
+				if !ok {
+					return nil, fmt.Errorf("Expecting string key in dependency mapping")
+				}
+				mapping[kStr] = v
+			}
+		}
+	}
+	if releaseId == "" {
+		return nil, fmt.Errorf("Missing 'release_id' in dependency")
+	}
+	cfg := NewDependencyConfig(releaseId)
+	cfg.Mapping = mapping
+	return cfg, nil
 }
-
