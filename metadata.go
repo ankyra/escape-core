@@ -351,7 +351,7 @@ func (m *ReleaseMetadata) GetVersionlessReleaseId() string {
 
 func (m *ReleaseMetadata) AddInputVariable(input *variables.Variable) {
 	for _, i := range m.Inputs {
-		if i.GetId() == input.GetId() {
+		if i.Id == input.Id {
 			i.Default = input.Default
 			return
 		}
@@ -361,7 +361,7 @@ func (m *ReleaseMetadata) AddInputVariable(input *variables.Variable) {
 
 func (m *ReleaseMetadata) AddOutputVariable(output *variables.Variable) {
 	for _, i := range m.Outputs {
-		if i.GetId() == output.GetId() {
+		if i.Id == output.Id {
 			return
 		}
 	}

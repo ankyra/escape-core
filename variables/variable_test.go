@@ -55,19 +55,29 @@ func (s *variableSuite) Test_GetValue_String_Variable(c *C) {
 }
 
 func (s *variableSuite) Test_GetValue_Uses_Default(c *C) {
-	unit, err := NewVariableFromString("test", "string")
-	c.Assert(err, IsNil)
-	defaultVal := "test value"
-	unit.SetDefault(&defaultVal)
-	val, err := unit.GetValue(nil, nil)
-	c.Assert(err, IsNil)
-	c.Assert(val, Equals, "test value")
+	stringValue := "test"
+	testCases := [][]interface{}{
+		[]interface{}{"test value", "test value"},
+		[]interface{}{12, "12"},
+		[]interface{}{12.0, "12"},
+		[]interface{}{true, "1"},
+		[]interface{}{&stringValue, "test"},
+		[]interface{}{[]interface{}{"test"}, `["test"]`},
+	}
+	for _, test := range testCases {
+		unit, err := NewVariableFromString("test", "string")
+		c.Assert(err, IsNil)
+		unit.Default = test[0]
+		val, err := unit.GetValue(nil, nil)
+		c.Assert(err, IsNil)
+		c.Assert(val, DeepEquals, test[1])
+	}
 }
 
 func (s *variableSuite) Test_GetValue_OneOf_Variable(c *C) {
 	unit, err := NewVariableFromString("test", "string")
 	c.Assert(err, IsNil)
-	unit.SetOneOfItems([]interface{}{"valid", "also valid"})
+	unit.Items = []interface{}{"valid", "also valid"}
 	variableCtx := map[string]interface{}{
 		"test": "valid",
 	}
@@ -79,7 +89,7 @@ func (s *variableSuite) Test_GetValue_OneOf_Variable(c *C) {
 func (s *variableSuite) Test_GetValue_OneOf_Variable_Fails(c *C) {
 	unit, err := NewVariableFromString("test", "string")
 	c.Assert(err, IsNil)
-	unit.SetOneOfItems([]interface{}{"valid", "also valid"})
+	unit.Items = []interface{}{"valid", "also valid"}
 	variableCtx := map[string]interface{}{
 		"test": "not valid",
 	}
@@ -152,4 +162,42 @@ func (s *variableSuite) Test_GetValue_List_Variable_Checks_String_Values(c *C) {
 	val, err := unit.GetValue(&variableCtx, nil)
 	c.Assert(val, IsNil)
 	c.Assert(err.Error(), Equals, "Unexpected 'integer' value in list, expecting 'string' for variable 'test'")
+}
+
+func (s *variableSuite) Test_NewVariable_Default_Visible_and_EvalBeforeDependencies(c *C) {
+	v := NewVariable()
+	c.Assert(v.Visible, Equals, true)
+	c.Assert(v.EvalBeforeDependencies, Equals, true)
+}
+
+func (s *variableSuite) Test_NewVariableFromString_Default_Visible_and_EvalBeforeDependencies(c *C) {
+	v, err := NewVariableFromString("test", "string")
+	c.Assert(err, IsNil)
+	c.Assert(v.Visible, Equals, true)
+	c.Assert(v.EvalBeforeDependencies, Equals, true)
+}
+
+func (s *variableSuite) Test_NewVariableFromDict_Default_Visible_and_EvalBeforeDependencies(c *C) {
+	dict := map[interface{}]interface{}{
+		"id": "test",
+	}
+	v, err := NewVariableFromDict(dict)
+	c.Assert(err, IsNil)
+	c.Assert(v.Visible, Equals, true)
+	c.Assert(v.EvalBeforeDependencies, Equals, true)
+}
+
+func (s *variableSuite) Test_NewVariableFromDict_fails_if_missing_id(c *C) {
+	dict := map[interface{}]interface{}{}
+	_, err := NewVariableFromDict(dict)
+	c.Assert(err.Error(), Equals, "Missing 'id' field in variable")
+}
+
+func (s *variableSuite) Test_NewVariableFromDict_fails_if_type_invalid(c *C) {
+	dict := map[interface{}]interface{}{
+		"id":   "test",
+		"type": "unknown",
+	}
+	_, err := NewVariableFromDict(dict)
+	c.Assert(err.Error(), Equals, "Unknown variable type: unknown")
 }
