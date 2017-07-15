@@ -222,3 +222,12 @@ func (s *metadataSuite) Test_FromJson(c *C) {
 	c.Assert(m.GetVariableContext()["base"], Equals, "test-depends-v1")
 	c.Assert(m.GetVariableContext()["test-depends"], Equals, "test-depends-v1")
 }
+
+func (s *metadataSuite) Test_DependencyConfig_Mapping_is_set(c *C) {
+	dep := NewDependencyConfig("my-dependency")
+	dep.Mapping = nil
+	c.Assert(dep.Mapping, IsNil)
+	c.Assert(dep.Validate(), IsNil)
+	c.Assert(dep.Mapping, Not(IsNil))
+	c.Assert(dep.Mapping, HasLen, 0)
+}

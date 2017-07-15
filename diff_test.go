@@ -257,7 +257,7 @@ func (s *metadataSuite) Test_Diff_Slices(c *C) {
 
 		[]interface{}{"Depends", []string{"test"}, []string{}, `Remove 'test' from Depends`},
 		[]interface{}{"Depends", []string{}, []string{"test"}, `Add 'test' to Depends`},
-		[]interface{}{"Depends", []string{"test"}, []string{"kubernetes"}, `Change Depends[0] from 'test' to 'kubernetes'`},
+		[]interface{}{"Depends", []string{"test"}, []string{"kubernetes"}, `Change Depends[0].ReleaseId from 'test' to 'kubernetes'`},
 
 		[]interface{}{"Extends", []string{"test"}, []string{}, `Remove 'test' from Extends`},
 		[]interface{}{"Extends", []string{}, []string{"test"}, `Add 'test' to Extends`},
