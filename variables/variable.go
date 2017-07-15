@@ -56,8 +56,6 @@ func NewVariableFromString(id, typ string) (*Variable, error) {
 	if variable_types.VariableIdIsReservedType(v.Id) {
 		v.Type = v.Id
 	}
-	v.EvalBeforeDependencies = true
-	v.Visible = true
 	return v, v.Validate()
 }
 

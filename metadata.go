@@ -132,6 +132,10 @@ func NewReleaseMetadataFromFile(metadataFile string) (*ReleaseMetadata, error) {
 	return NewReleaseMetadataFromJsonString(string(content))
 }
 
+func (m *ReleaseMetadata) Validate() error {
+	return validate(m)
+}
+
 func validate(m *ReleaseMetadata) error {
 	if m == nil {
 		return fmt.Errorf("Missing release metadata")
