@@ -231,3 +231,18 @@ func (s *metadataSuite) Test_DependencyConfig_Mapping_is_set(c *C) {
 	c.Assert(dep.Mapping, Not(IsNil))
 	c.Assert(dep.Mapping, HasLen, 0)
 }
+
+func (s *metadataSuite) Test_NewDependencyConfigFromMap(c *C) {
+	dep, err := NewDependencyConfigFromMap(map[interface{}]interface{}{
+        "release_id": "test-latest",
+        "mapping": map[interface{}]interface{}{
+            "input_variable1": "test",
+        },
+    })
+    c.Assert(err, IsNil)
+	c.Assert(dep.ReleaseId, Equals, "test-latest")
+	c.Assert(dep.Validate(), IsNil)
+	c.Assert(dep.Mapping, Not(IsNil))
+	c.Assert(dep.Mapping, HasLen, 1)
+	c.Assert(dep.Mapping["input_variable1"], Equals, "test")
+}

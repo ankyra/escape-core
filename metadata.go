@@ -72,6 +72,42 @@ func NewDependencyConfig(releaseId string) *DependencyConfig {
 	}
 }
 
+func NewDependencyConfigFromMap(dep map[interface{}]interface{}) (*DependencyConfig, error) {
+    var releaseId string
+    mapping := map[string]interface{}{}
+    for key, val := range dep {
+        keyStr, ok := key.(string)
+        if !ok {
+            return nil, fmt.Errorf("Expecting string key in dependency")
+        }
+        if keyStr == "release_id" {
+            valString, ok := val.(string)
+            if !ok {
+                return nil, fmt.Errorf("Expecting string for dependency 'release_id' got '%T'", val)
+            }
+            releaseId = valString
+        } else if key == "mapping" {
+            valMap, ok := val.(map[interface{}]interface{})
+            if !ok {
+                return nil, fmt.Errorf("Expecting dict for dependency 'mapping' got '%T'", val)
+            }
+            for k, v := range valMap {
+                kStr, ok := k.(string)
+                if !ok {
+                    return nil, fmt.Errorf("Expecting string key in dependency mapping")
+                }
+                mapping[kStr] = v
+            }
+        }
+    }
+    if releaseId == "" {
+        return nil, fmt.Errorf("Missing 'release_id' in dependency")
+    }
+    cfg := NewDependencyConfig(releaseId)
+    cfg.Mapping = mapping
+    return cfg, nil
+}
+
 type ExtensionConfig struct {
 	ReleaseId string `json:"release_id"`
 }
@@ -319,14 +355,6 @@ func (m *ReleaseMetadata) SetProvides(p []string) {
 	for _, provider := range p {
 		m.AddProvides(provider)
 	}
-}
-
-func (m *ReleaseMetadata) GetDependencies() []string {
-	result := []string{}
-	for _, c := range m.Depends {
-		result = append(result, c.ReleaseId)
-	}
-	return result
 }
 
 func (m *ReleaseMetadata) AddDependency(dep *DependencyConfig) {
