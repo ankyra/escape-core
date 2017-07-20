@@ -17,6 +17,7 @@ limitations under the License.
 package variables
 
 import (
+	"github.com/ankyra/escape-core/script"
 	. "gopkg.in/check.v1"
 	"testing"
 )
@@ -86,6 +87,47 @@ func (s *variableSuite) Test_GetValue_OneOf_Variable(c *C) {
 	c.Assert(val, DeepEquals, "valid")
 }
 
+func (s *variableSuite) Test_GetValue_OneOf_Variable_Script(c *C) {
+	unit, err := NewVariableFromString("test", "string")
+	c.Assert(err, IsNil)
+	unit.Items = `$__split("valid,also valid", ",")`
+	variableCtx := map[string]interface{}{
+		"test": "valid",
+	}
+	globalsDict := map[string]script.Script{}
+	env := script.NewScriptEnvironmentWithGlobals(globalsDict)
+	val, err := unit.GetValue(&variableCtx, env)
+	c.Assert(err, IsNil)
+	c.Assert(val, DeepEquals, "valid")
+}
+
+func (s *variableSuite) Test_GetValue_OneOf_Variable_List_Script(c *C) {
+	unit, err := NewVariableFromString("test", "string")
+	c.Assert(err, IsNil)
+	unit.Items = []interface{}{`$__concat("val", "id")`, `$__concat("also ", "valid")`}
+	variableCtx := map[string]interface{}{
+		"test": "valid",
+	}
+	globalsDict := map[string]script.Script{}
+	env := script.NewScriptEnvironmentWithGlobals(globalsDict)
+	val, err := unit.GetValue(&variableCtx, env)
+	c.Assert(err, IsNil)
+	c.Assert(val, DeepEquals, "valid")
+}
+
+func (s *variableSuite) Test_GetValue_OneOf_Variable_Script_fails(c *C) {
+	unit, err := NewVariableFromString("test", "string")
+	c.Assert(err, IsNil)
+	unit.Items = `$__split("valid,also valid", ",")`
+	variableCtx := map[string]interface{}{
+		"test": "not valid",
+	}
+	globalsDict := map[string]script.Script{}
+	env := script.NewScriptEnvironmentWithGlobals(globalsDict)
+	_, err = unit.GetValue(&variableCtx, env)
+	c.Assert(err.Error(), DeepEquals, "Expecting one of [\"valid\",\"also valid\"] for variable 'test'")
+}
+
 func (s *variableSuite) Test_GetValue_OneOf_Variable_Fails(c *C) {
 	unit, err := NewVariableFromString("test", "string")
 	c.Assert(err, IsNil)
@@ -96,6 +138,18 @@ func (s *variableSuite) Test_GetValue_OneOf_Variable_Fails(c *C) {
 	val, err := unit.GetValue(&variableCtx, nil)
 	c.Assert(val, IsNil)
 	c.Assert(err.Error(), DeepEquals, "Expecting one of [\"valid\",\"also valid\"] for variable 'test'")
+}
+
+func (s *variableSuite) Test_GetValue_OneOf_Variable_string(c *C) {
+	unit, err := NewVariableFromString("test", "string")
+	c.Assert(err, IsNil)
+	unit.Items = "valid"
+	variableCtx := map[string]interface{}{
+		"test": "not valid",
+	}
+	val, err := unit.GetValue(&variableCtx, nil)
+	c.Assert(val, IsNil)
+	c.Assert(err.Error(), DeepEquals, "Unexpected value 'not valid' for variable 'test', only 'valid' is allowed")
 }
 
 func (s *variableSuite) Test_String_Variable_Converts_To_String_Value(c *C) {
