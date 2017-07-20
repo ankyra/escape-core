@@ -242,7 +242,18 @@ func (s *exprSuite) Test_Eval_List(c *C) {
 	v := LiftList(list)
 	result, err := EvalToGoValue(v, nil)
 	c.Assert(err, IsNil)
-	c.Assert(result, DeepEquals, list)
+	c.Assert(result, DeepEquals, []interface{}{"test", 12})
+}
+
+func (s *exprSuite) Test_Eval_List_evals_recursive(c *C) {
+	f := LiftFunction(builtinId)
+	t := LiftString("test")
+	a := NewApply(f, []Script{t})
+	list := []Script{a}
+	v := LiftList(list)
+	result, err := EvalToGoValue(v, nil)
+	c.Assert(err, IsNil)
+	c.Assert(result, DeepEquals, []interface{}{"test"})
 }
 
 func (s *exprSuite) Test_Eval_Dict(c *C) {
