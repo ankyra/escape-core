@@ -82,7 +82,7 @@ func (s *suite) Test_CommitVersion_sets_provides_field(c *C) {
 	metadata := core.NewReleaseMetadata("test", "1")
 	metadata.SetProvides([]string{"test-provider"})
 	depl.CommitVersion("deploy", metadata)
-	c.Assert(depl.getStage("deploy").Provides, DeepEquals, []string{"test-provider"})
+	c.Assert(depl.GetStageOrCreateNew("deploy").Provides, DeepEquals, []string{"test-provider"})
 }
 
 func (s *suite) Test_GetBuildInputs(c *C) {
@@ -95,7 +95,7 @@ func (s *suite) Test_GetBuildInputs(c *C) {
 }
 
 func (s *suite) Test_GetProviders_nil_providers(c *C) {
-	depl.getStage("deploy").Providers = nil
+	depl.GetStageOrCreateNew("deploy").Providers = nil
 	providers := depl.GetProviders("deploy")
 	c.Assert(providers, HasLen, 0)
 }
