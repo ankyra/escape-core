@@ -24,14 +24,14 @@ import (
 	"path/filepath"
 )
 
-type StateProvider interface {
+type Backend interface {
 	Save(d *DeploymentState) error
 }
 
 type ProjectState struct {
 	Name         string                       `json:"name"`
 	Environments map[string]*EnvironmentState `json:"environments,omitempty"`
-	Backend      StateProvider                `json:"-"`
+	Backend      Backend                      `json:"-"`
 }
 
 func newProjectState(prjName string) (*ProjectState, error) {
@@ -41,7 +41,7 @@ func newProjectState(prjName string) (*ProjectState, error) {
 	}, nil
 }
 
-func NewProjectStateFromJsonString(data string, provider StateProvider) (*ProjectState, error) {
+func NewProjectStateFromJsonString(data string, backend Backend) (*ProjectState, error) {
 	prjState, err := newProjectState("")
 	if err != nil {
 		return nil, err
@@ -52,11 +52,11 @@ func NewProjectStateFromJsonString(data string, provider StateProvider) (*Projec
 	if err := prjState.validateAndFix(); err != nil {
 		return nil, err
 	}
-	prjState.Backend = provider
+	prjState.Backend = backend
 	return prjState, nil
 }
 
-func NewProjectStateFromFile(prjName, cfgFile string, provider StateProvider) (*ProjectState, error) {
+func NewProjectStateFromFile(prjName, cfgFile string, backend Backend) (*ProjectState, error) {
 	if cfgFile == "" {
 		return nil, fmt.Errorf("Configuration file path is required.")
 	}
@@ -69,14 +69,14 @@ func NewProjectStateFromFile(prjName, cfgFile string, provider StateProvider) (*
 		if err != nil {
 			return nil, err
 		}
-		p.Backend = provider
+		p.Backend = backend
 		return p, p.validateAndFix()
 	}
 	data, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
 		return nil, err
 	}
-	result, err := NewProjectStateFromJsonString(string(data), provider)
+	result, err := NewProjectStateFromJsonString(string(data), backend)
 	if err != nil {
 		return nil, err
 	}
