@@ -83,22 +83,22 @@ func (d *DeploymentState) GetCalculatedOutputs(stage string) map[string]interfac
 }
 
 func (d *DeploymentState) UpdateInputs(stage string, inputs map[string]interface{}) error {
-	d.GetStageOrCreateNew(stage).setInputs(inputs)
+	d.GetStageOrCreateNew(stage).SetInputs(inputs)
 	return d.Save()
 }
 
 func (d *DeploymentState) UpdateUserInputs(stage string, inputs map[string]interface{}) error {
-	d.GetStageOrCreateNew(stage).setUserInputs(inputs)
+	d.GetStageOrCreateNew(stage).SetUserInputs(inputs)
 	return d.Save()
 }
 
 func (d *DeploymentState) UpdateOutputs(stage string, outputs map[string]interface{}) error {
-	d.GetStageOrCreateNew(stage).setOutputs(outputs)
+	d.GetStageOrCreateNew(stage).SetOutputs(outputs)
 	return d.Save()
 }
 
 func (d *DeploymentState) CommitVersion(stage string, metadata *core.ReleaseMetadata) error {
-	d.GetStageOrCreateNew(stage).setVersion(metadata.Version)
+	d.GetStageOrCreateNew(stage).SetVersion(metadata.Version)
 	d.GetStageOrCreateNew(stage).Provides = metadata.GetProvides()
 	return nil
 }
