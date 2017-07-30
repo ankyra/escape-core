@@ -1,0 +1,15 @@
+name: escape-core
+version: 0.0.@
+includes:
+- docs/
+- parsers/
+- script/
+- state/
+- templates/
+- util/
+- variables/
+- vendor/
+- "*.go"
+- LICENSE
+- README.md
+build: build.sh
