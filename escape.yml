@@ -1,5 +1,12 @@
 name: escape-core
 version: 0.0.@
+
+description: >
+    Core library containing datastructures for working with Release Metadata and
+    the Escape Scripting Language.
+
+    Please see http://escape.ankyra.io for the full documentation.
+
 includes:
 - docs/
 - parsers/
@@ -12,4 +19,6 @@ includes:
 - "*.go"
 - LICENSE
 - README.md
+
+
 build: build.sh
