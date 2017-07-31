@@ -34,25 +34,29 @@ func main() {
 title: "Escape Standard Library Reference"
 slug: scripting-language-stdlib 
 type: "docs"
+toc: true
 ---
 
 <style>
-h3 {
+h2 {
   font-size: 0.8em;
   font-family: mono;
   background: #4B9CD3;
   padding: 5px;
 }
 </style>
+
+Standard library functions for the [Escape Scripting Language](../scripting-language/)
+
 `
 	for cls, typ := range class {
 		if cls == "" {
-			s = fmt.Sprintf("%s\n## Unary functions\n\n", s)
+			s = fmt.Sprintf("%s\n# Unary functions\n\n", s)
 		} else {
-			s = fmt.Sprintf("%s\n## Functions acting on %s\n\n", s, cls)
+			s = fmt.Sprintf("%s\n# Functions acting on %s\n\n", s, cls)
 		}
 		for sig, doc := range typ.Methods {
-			s = fmt.Sprintf("%s### %s\n\n%s\n\n", s, sig, doc)
+			s = fmt.Sprintf("%s## %s\n\n%s\n\n", s, sig, doc)
 		}
 	}
 	ioutil.WriteFile("docs/stdlib.md", []byte(s), 0644)
