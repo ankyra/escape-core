@@ -2,10 +2,12 @@ name: escape-core
 version: 0.4.@
 
 description: >
-    Core library containing datastructures for working with Release Metadata and
-    the Escape Scripting Language.
+    Core library containing datastructures for working with Release Metadata,
+    State and the Escape Scripting Language.
 
-    Please see http://escape.ankyra.io for the full documentation.
+    Please see https://escape.ankyra.io for the full documentation.
+
+logo: logo.png
 
 metadata:
   release_metadata_api_version: "4"
@@ -26,3 +28,4 @@ includes:
 
 build: build.sh
 test: test.sh
+
