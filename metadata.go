@@ -234,18 +234,46 @@ func (m *ReleaseMetadata) GetScript(stage string) string {
 	return m.GetStage(stage).Script
 }
 
-func (m *ReleaseMetadata) AddConsumes(c string) {
-	for _, consumer := range m.Consumes {
-		if consumer.Name == c {
+func (m *ReleaseMetadata) AddInputVariable(input *variables.Variable) {
+	for _, i := range m.Inputs {
+		if i.Id == input.Id {
+			i.Default = input.Default
+			if len(i.Scopes) < len(input.Scopes) {
+				i.Scopes = input.Scopes
+			}
 			return
 		}
 	}
-	m.Consumes = append(m.Consumes, NewConsumerConfig(c))
+	m.Inputs = append(m.Inputs, input)
+}
+
+func (m *ReleaseMetadata) AddOutputVariable(output *variables.Variable) {
+	for _, i := range m.Outputs {
+		if i.Id == output.Id {
+			if len(i.Scopes) < len(output.Scopes) {
+				i.Scopes = output.Scopes
+			}
+			return
+		}
+	}
+	m.Outputs = append(m.Outputs, output)
+}
+
+func (m *ReleaseMetadata) AddConsumes(c *ConsumerConfig) {
+	for _, consumer := range m.Consumes {
+		if consumer.Name == c.Name {
+			if len(consumer.Scopes) < len(c.Scopes) {
+				consumer.Scopes = c.Scopes
+			}
+			return
+		}
+	}
+	m.Consumes = append(m.Consumes, c)
 }
 
 func (m *ReleaseMetadata) SetConsumes(c []string) {
 	for _, consumer := range c {
-		m.AddConsumes(consumer)
+		m.AddConsumes(NewConsumerConfig(consumer))
 	}
 }
 
@@ -355,25 +383,6 @@ func (m *ReleaseMetadata) GetProject() string {
 
 func (m *ReleaseMetadata) GetVersionlessReleaseId() string {
 	return m.GetProject() + "/" + m.Name
-}
-
-func (m *ReleaseMetadata) AddInputVariable(input *variables.Variable) {
-	for _, i := range m.Inputs {
-		if i.Id == input.Id {
-			i.Default = input.Default
-			return
-		}
-	}
-	m.Inputs = append(m.Inputs, input)
-}
-
-func (m *ReleaseMetadata) AddOutputVariable(output *variables.Variable) {
-	for _, i := range m.Outputs {
-		if i.Id == output.Id {
-			return
-		}
-	}
-	m.Outputs = append(m.Outputs, output)
 }
 
 func (m *ReleaseMetadata) ToJson() string {
