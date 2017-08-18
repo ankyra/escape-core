@@ -154,25 +154,33 @@ func (s *metadataSuite) Test_VariableContext(c *C) {
 func (s *metadataSuite) Test_InputVariables(c *C) {
 	v1, _ := variables.NewVariableFromString("input_variable1", "string")
 	v2, _ := variables.NewVariableFromString("input_variable2", "string")
+	v2.Scopes = []string{"deploy"}
 	m := NewReleaseMetadata("test-release", "0.1")
 	m.AddInputVariable(v1)
 	m.AddInputVariable(v2)
-	vars := m.GetInputs()
+	vars := m.GetInputs("deploy")
 	c.Assert(vars, HasLen, 2)
 	c.Assert(vars[0], Equals, v1)
 	c.Assert(vars[1], Equals, v2)
+	vars = m.GetInputs("build")
+	c.Assert(vars, HasLen, 1)
+	c.Assert(vars[0], Equals, v1)
 }
 
 func (s *metadataSuite) Test_OutputVariables(c *C) {
 	v1, _ := variables.NewVariableFromString("output_variable1", "string")
 	v2, _ := variables.NewVariableFromString("output_variable2", "string")
+	v2.Scopes = []string{"deploy"}
 	m := NewReleaseMetadata("test-release", "0.1")
 	m.AddOutputVariable(v1)
 	m.AddOutputVariable(v2)
-	vars := m.GetOutputs()
+	vars := m.GetOutputs("deploy")
 	c.Assert(len(vars), Equals, 2)
 	c.Assert(vars[0], Equals, v1)
 	c.Assert(vars[1], Equals, v2)
+	vars = m.GetOutputs("build")
+	c.Assert(len(vars), Equals, 1)
+	c.Assert(vars[0], Equals, v1)
 }
 
 func (s *metadataSuite) Test_GetDirectores(c *C) {

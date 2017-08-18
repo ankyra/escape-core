@@ -151,14 +151,14 @@ func (s *StateCompiler) CompileState(d *DeploymentState, metadata *core.ReleaseM
 		inputs := map[string]interface{}{}
 		outputs := map[string]interface{}{}
 		for key, val := range d.GetCalculatedInputs(stage) {
-			for _, defined := range metadata.GetInputs() {
+			for _, defined := range metadata.GetInputs(stage) {
 				if key == defined.Id {
 					inputs[key] = val
 				}
 			}
 		}
 		for key, val := range d.GetCalculatedOutputs(stage) {
-			for _, defined := range metadata.GetOutputs() {
+			for _, defined := range metadata.GetOutputs(stage) {
 				if key == defined.Id {
 					outputs[key] = val
 				}

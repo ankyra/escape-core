@@ -267,18 +267,22 @@ func (m *ReleaseMetadata) GetErrands() map[string]*Errand {
 	return result
 }
 
-func (m *ReleaseMetadata) GetInputs() []*variables.Variable {
+func (m *ReleaseMetadata) GetInputs(stage string) []*variables.Variable {
 	result := []*variables.Variable{}
 	for _, i := range m.Inputs {
-		result = append(result, i)
+		if i.InScope(stage) {
+			result = append(result, i)
+		}
 	}
 	return result
 }
 
-func (m *ReleaseMetadata) GetOutputs() []*variables.Variable {
+func (m *ReleaseMetadata) GetOutputs(stage string) []*variables.Variable {
 	result := []*variables.Variable{}
 	for _, i := range m.Outputs {
-		result = append(result, i)
+		if i.InScope(stage) {
+			result = append(result, i)
+		}
 	}
 	return result
 }
