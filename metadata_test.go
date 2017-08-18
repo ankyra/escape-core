@@ -18,10 +18,11 @@ package core
 
 import (
 	"encoding/json"
-	"github.com/ankyra/escape-core/variables"
-	. "gopkg.in/check.v1"
 	"strconv"
 	"testing"
+
+	"github.com/ankyra/escape-core/variables"
+	. "gopkg.in/check.v1"
 )
 
 type metadataSuite struct{}
@@ -200,7 +201,7 @@ func (s *metadataSuite) Test_FromJson(c *C) {
         "api_version": 1,
         "project": "my-project",
         "consumes": [{ "Name": "provider1" }, 
-                     { "name" : "provider2" }],
+					 { "name" : "provider2", "scopes": ["deploy"] }],
         "name": "test-release",
         "description": "Test release",
         "version": "0.1",
@@ -216,9 +217,11 @@ func (s *metadataSuite) Test_FromJson(c *C) {
 	c.Assert(m.Name, Equals, "test-release")
 	c.Assert(m.Description, Equals, "Test release")
 	c.Assert(m.Version, Equals, "0.1")
-	c.Assert(m.GetConsumes(), HasLen, 2)
-	c.Assert(m.GetConsumes()[0], Equals, "provider1")
-	c.Assert(m.GetConsumes()[1], Equals, "provider2")
+	c.Assert(m.GetConsumes("deploy"), HasLen, 2)
+	c.Assert(m.GetConsumes("deploy")[0], Equals, "provider1")
+	c.Assert(m.GetConsumes("deploy")[1], Equals, "provider2")
+	c.Assert(m.GetConsumes("build"), HasLen, 1)
+	c.Assert(m.GetConsumes("build")[0], Equals, "provider1")
 	c.Assert(m.GetVariableContext()["base"], Equals, "test-depends-v1")
 	c.Assert(m.GetVariableContext()["test-depends"], Equals, "test-depends-v1")
 }

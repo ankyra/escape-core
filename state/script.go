@@ -18,6 +18,7 @@ package state
 
 import (
 	"fmt"
+
 	"github.com/ankyra/escape-core"
 	"github.com/ankyra/escape-core/script"
 )
@@ -98,7 +99,7 @@ func (s *StateCompiler) CompileDependencies(d *DeploymentState, metadata *core.R
 
 func (s *StateCompiler) CompileProviders(d *DeploymentState, metadata *core.ReleaseMetadata, stage string) error {
 	providers := d.GetProviders(stage)
-	for _, consumes := range metadata.GetConsumes() {
+	for _, consumes := range metadata.GetConsumes(stage) {
 		deplName, ok := providers[consumes]
 		if !ok {
 			return fmt.Errorf("No provider of type '%s' was configured in the deployment state.", consumes)

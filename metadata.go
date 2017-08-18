@@ -20,29 +20,22 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"regexp"
+	"strings"
+
 	"github.com/ankyra/escape-core/parsers"
 	"github.com/ankyra/escape-core/script"
 	"github.com/ankyra/escape-core/templates"
 	"github.com/ankyra/escape-core/util"
 	"github.com/ankyra/escape-core/variables"
-	"io/ioutil"
-	"path/filepath"
-	"regexp"
-	"strings"
 )
 
-const CurrentApiVersion = 4
+const CurrentApiVersion = 5
 
 type ExecStage struct {
 	Script string `json:"script"`
-}
-
-type ConsumerConfig struct {
-	Name string `json:"name"`
-}
-
-func NewConsumerConfig(name string) *ConsumerConfig {
-	return &ConsumerConfig{name}
 }
 
 type ProviderConfig struct {
@@ -176,6 +169,11 @@ func validate(m *ReleaseMetadata) error {
 			return err
 		}
 	}
+	for _, c := range m.Consumes {
+		if err := c.ValidateAndFix(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -251,10 +249,12 @@ func (m *ReleaseMetadata) SetConsumes(c []string) {
 	}
 }
 
-func (m *ReleaseMetadata) GetConsumes() []string {
+func (m *ReleaseMetadata) GetConsumes(stage string) []string {
 	result := []string{}
 	for _, c := range m.Consumes {
-		result = append(result, c.Name)
+		if c.InScope(stage) {
+			result = append(result, c.Name)
+		}
 	}
 	return result
 }
