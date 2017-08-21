@@ -1,5 +1,5 @@
 name: escape-core
-version: 0.5.@
+version: 0.6.@
 
 description: >
     Core library containing datastructures for working with Release Metadata,
@@ -10,7 +10,7 @@ description: >
 logo: logo.png
 
 metadata:
-  release_metadata_api_version: "4"
+  release_metadata_api_version: "6"
 
 includes:
 - docs/
@@ -29,3 +29,7 @@ includes:
 build: build.sh
 test: test.sh
 
+templates:
+- file: core.go.tpl
+  mapping:
+    metadata_api_version: $this.metadata.release_metadata_api_version
