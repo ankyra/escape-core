@@ -52,6 +52,15 @@ func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	return nil
 }
 
+func (d *DependencyConfig) InScope(scope string) bool {
+	for _, s := range d.Scopes {
+		if s == scope {
+			return true
+		}
+	}
+	return false
+}
+
 func NewDependencyConfigFromMap(dep map[interface{}]interface{}) (*DependencyConfig, error) {
 	var releaseId string
 	mapping := map[string]interface{}{}
