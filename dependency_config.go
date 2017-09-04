@@ -43,15 +43,6 @@ func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	if d.Scopes == nil || len(d.Scopes) == 0 {
 		d.Scopes = []string{"build", "deploy"}
 	}
-	for _, input := range m.Inputs {
-		_, alreadySet := d.Mapping[input.Id]
-		if alreadySet {
-			continue
-		}
-		if input.EvalBeforeDependencies {
-			d.Mapping[input.Id] = "$this.inputs." + input.Id
-		}
-	}
 	return nil
 }
 
