@@ -46,10 +46,12 @@ func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	return nil
 }
 
-func (d *DependencyConfig) InScope(scope string) bool {
+func (d *DependencyConfig) InScope(scopes ...string) bool {
 	for _, s := range d.Scopes {
-		if s == scope {
-			return true
+		for _, scope := range scopes {
+			if s == scope {
+				return true
+			}
 		}
 	}
 	return false
