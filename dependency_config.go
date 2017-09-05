@@ -51,12 +51,32 @@ func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	return nil
 }
 
-func (d *DependencyConfig) InScope(scopes ...string) bool {
-	for _, s := range d.Scopes {
-		for _, scope := range scopes {
-			if s == scope {
-				return true
+func (d *DependencyConfig) GetMapping(scope string) map[string]interface{} {
+	if scope == "build" {
+		return d.BuildMapping
+	}
+	if scope == "deploy" {
+		return d.DeployMapping
+	}
+	return nil
+}
+
+func (d *DependencyConfig) AddVariableMapping(scopes []string, id, key string) {
+	for _, scope := range scopes {
+		mapping := d.GetMapping(scope)
+		if mapping != nil {
+			_, found := mapping[id]
+			if !found {
+				mapping[id] = key
 			}
+		}
+	}
+}
+
+func (d *DependencyConfig) InScope(scope string) bool {
+	for _, s := range d.Scopes {
+		if s == scope {
+			return true
 		}
 	}
 	return false
