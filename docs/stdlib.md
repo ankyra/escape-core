@@ -17,20 +17,6 @@ h2 {
 Standard library functions for the [Escape Scripting Language](../scripting-language/)
 
 
-# Functions acting on integers
-
-## add(y :: integer)
-
-Add two integers
-
-
-# Unary functions
-
-## timestamp()
-
-Returns a UNIX timestamp
-
-
 # Functions acting on everything
 
 ## id(parameter :: *)
@@ -59,6 +45,30 @@ Slice a list. Usually accessed implicitly using slice syntax (eg. `list[0:5]`)
 
 # Functions acting on strings
 
+## trim()
+
+Returns a slice of the string s, with all leading and trailing white space removed, as defined by Unicode. 
+
+## track_version()
+
+Track version
+
+## lower(v :: string)
+
+Returns a copy of the string v with all Unicode characters mapped to their lower case
+
+## title(v :: string)
+
+Returns a copy of the string v with all Unicode characters mapped to their title case
+
+## replace(old :: string, new :: string, n :: integer)
+
+Replace returns a copy of the string s with the first n non-overlapping instances of old replaced by new. If old is empty, it matches at the beginning of the string and after each UTF-8 sequence, yielding up to k+1 replacements for a k-rune string. If n < 0, there is no limit on the number of replacements.
+
+## base64_encode()
+
+Encode string to base64
+
 ## read_file()
 
 Read the contents of a file
@@ -67,17 +77,17 @@ Read the contents of a file
 
 Track patch version
 
-## replace(old :: string, new :: string, n :: integer)
+## concat(v1 :: string, v2 :: string, ...)
 
-Replace returns a copy of the string s with the first n non-overlapping instances of old replaced by new. If old is empty, it matches at the beginning of the string and after each UTF-8 sequence, yielding up to k+1 replacements for a k-rune string. If n < 0, there is no limit on the number of replacements.
+Concatate stringable arguments
 
-## trim()
+## base64_decode()
 
-Returns a slice of the string s, with all leading and trailing white space removed, as defined by Unicode. 
+Decode string from base64
 
-## lower(v :: string)
+## track_major_version()
 
-Returns a copy of the string v with all Unicode characters mapped to their lower case
+Track major version
 
 ## upper(v :: string)
 
@@ -87,31 +97,21 @@ Returns a copy of the string v with all Unicode characters mapped to their upper
 
 Split slices s into all substrings separated by sep and returns a slice of the substrings between those separators. If sep is empty, Split splits after each UTF-8 sequence.
 
-## base64_decode()
-
-Decode string from base64
-
-## track_version()
-
-Track version
-
-## concat(v1 :: string, v2 :: string, ...)
-
-Concatate stringable arguments
-
-## title(v :: string)
-
-Returns a copy of the string v with all Unicode characters mapped to their title case
-
-## base64_encode()
-
-Encode string to base64
-
-## track_major_version()
-
-Track major version
-
 ## track_minor_version()
 
 Track minor version
+
+
+# Functions acting on integers
+
+## add(y :: integer)
+
+Add two integers
+
+
+# Unary functions
+
+## timestamp()
+
+Returns a UNIX timestamp
 
