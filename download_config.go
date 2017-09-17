@@ -24,7 +24,7 @@ import (
 type DownloadConfig struct {
 	URL                   string   `json:"url"`
 	Dest                  string   `json:"dest"`
-	OverwriteExistingDest bool     `json:"overwrite"`
+	OverwriteExistingDest bool     `json:"overwrite" yaml:"overwrite"`
 	Unpack                bool     `json:"unpack"`
 	Platform              string   `json:"platform"`
 	Arch                  string   `json:"arch"`
