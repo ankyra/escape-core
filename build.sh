@@ -8,6 +8,10 @@ if test $user_id '==' 0 ; then
   username="root"
 fi
 
+ls -al .
+echo $PWD
+cd ~/project
+
 docker run --rm \
     -v "$PWD":/go/src/github.com/ankyra/escape-core \
     -w /go/src/github.com/ankyra/escape-core \
