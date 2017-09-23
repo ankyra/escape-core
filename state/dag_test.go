@@ -101,38 +101,48 @@ func (s *suite) Test_GetDeploymentStateDAG(c *C) {
 	dag, err := env.GetDeploymentStateDAG(stage)
 	c.Assert(err, IsNil)
 	c.Assert(dag, HasLen, 2)
-	c.Assert(dag[0].Node, DeepEquals, deplD)
-	c.Assert(dag[1].Node, DeepEquals, deplE)
-	c.Assert(dag[1].AndThen, HasLen, 1)
 
-	tsort, err := env.GetDeploymentStateTopologicalSort(stage)
-	c.Assert(err, IsNil)
-	c.Assert(tsort, HasLen, 5)
-	if tsort[0] == deplD {
-		c.Assert(tsort[0], DeepEquals, deplD)
-		if tsort[1] == deplC {
-			c.Assert(tsort[2], DeepEquals, deplB)
-		} else if tsort[1] == deplB {
-			c.Assert(tsort[2], DeepEquals, deplC)
-		} else {
-			c.Assert(false, Equals, true)
-		}
-		c.Assert(tsort[1], DeepEquals, deplC)
-		c.Assert(tsort[3], DeepEquals, deplE)
-		c.Assert(tsort[4], DeepEquals, deplA)
-	} else if tsort[0] == deplE {
-		c.Assert(tsort[0], DeepEquals, deplE)
-		c.Assert(tsort[1], DeepEquals, deplD)
-		if tsort[2] == deplC {
-			c.Assert(tsort[3], DeepEquals, deplB)
-		} else if tsort[2] == deplB {
-			c.Assert(tsort[3], DeepEquals, deplC)
-		} else {
-			c.Assert(false, Equals, true)
-		}
-		c.Assert(tsort[4], DeepEquals, deplA)
+	var eDag, dDag *DAGNode
+	if dag[0].Node.Name == "deplD" {
+		dDag = dag[0]
+		eDag = dag[1]
 	} else {
-		c.Assert(false, Equals, true)
+		dDag = dag[1]
+		eDag = dag[0]
+	}
+	c.Assert(dDag.Node, DeepEquals, deplD)
+	c.Assert(dDag.AndThen, HasLen, 2)
+
+	c.Assert(dDag.AndThen[0].Node, DeepEquals, deplB)
+	c.Assert(dDag.AndThen[0].AndThen, HasLen, 1)
+	c.Assert(dDag.AndThen[0].AndThen[0].Node, DeepEquals, deplA)
+
+	c.Assert(dDag.AndThen[1].Node, DeepEquals, deplC)
+	c.Assert(dDag.AndThen[1].AndThen, HasLen, 1)
+	c.Assert(dDag.AndThen[1].AndThen[0].Node, DeepEquals, deplB)
+
+	c.Assert(eDag.Node, DeepEquals, deplE)
+	c.Assert(eDag.AndThen, HasLen, 1)
+	c.Assert(eDag.AndThen[0].Node, DeepEquals, deplA)
+
+	i := 0
+	for i < 1000 {
+		tsort, err := env.GetDeploymentStateTopologicalSort(stage)
+		c.Assert(err, IsNil)
+		for ix, depl := range tsort {
+			st := depl.GetStageOrCreateNew(stage)
+			for _, deplName := range st.Providers {
+				found := false
+				for depIx, depDepl := range tsort {
+					if depDepl.Name == deplName {
+						found = true
+						c.Assert(depIx < ix, Equals, true, Commentf("Deployment '%s' should happen before '%s'", deplName, depl.Name))
+					}
+				}
+				c.Assert(found, Equals, true, Commentf("Missing deployment '%s' in topological sort", depl.Name))
+			}
+		}
+		i += 1
 	}
 }
 
