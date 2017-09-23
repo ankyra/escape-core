@@ -58,6 +58,71 @@ func (s *suite) Test_GetDeploymentStateDAG_two_deployments_one_provider(c *C) {
 	c.Assert(dag[0].AndThen, HasLen, 1)
 	c.Assert(dag[0].AndThen[0].Node, DeepEquals, depl1)
 	c.Assert(dag[0].AndThen[0].AndThen, HasLen, 0)
+
+	tsort, err := env.GetDeploymentStateTopologicalSort(stage)
+	c.Assert(err, IsNil)
+	c.Assert(tsort, HasLen, 2)
+	c.Assert(tsort[0], DeepEquals, depl2)
+	c.Assert(tsort[1], DeepEquals, depl1)
+}
+
+func (s *suite) Test_GetDeploymentStateDAG(c *C) {
+	// For deployment graph:
+	//
+	// A -> B, E
+	// B -> C, D
+	// C -> D
+	// D
+	// E
+
+	stage := "deploy"
+	prj, _ := NewProjectState("my-project")
+	env := prj.GetEnvironmentStateOrMakeNew("my-env")
+	deplA := env.GetOrCreateDeploymentState("deplA")
+	deplB := env.GetOrCreateDeploymentState("deplB")
+	deplC := env.GetOrCreateDeploymentState("deplC")
+	deplD := env.GetOrCreateDeploymentState("deplD")
+	deplE := env.GetOrCreateDeploymentState("deplE")
+
+	stA := deplA.GetStageOrCreateNew(stage)
+	stA.Providers["b"] = "deplB"
+	stA.Providers["e"] = "deplE"
+
+	stB := deplB.GetStageOrCreateNew(stage)
+	stB.Providers["c"] = "deplC"
+	stB.Providers["d"] = "deplD"
+
+	stC := deplC.GetStageOrCreateNew(stage)
+	stC.Providers["d"] = "deplD"
+
+	deplD.GetStageOrCreateNew(stage)
+	deplE.GetStageOrCreateNew(stage)
+
+	dag, err := env.GetDeploymentStateDAG(stage)
+	c.Assert(err, IsNil)
+	c.Assert(dag, HasLen, 2)
+	c.Assert(dag[0].Node, DeepEquals, deplD)
+	c.Assert(dag[1].Node, DeepEquals, deplE)
+	c.Assert(dag[1].AndThen, HasLen, 1)
+
+	tsort, err := env.GetDeploymentStateTopologicalSort(stage)
+	c.Assert(err, IsNil)
+	c.Assert(tsort, HasLen, 5)
+	if tsort[0] == deplD {
+		c.Assert(tsort[0], DeepEquals, deplD)
+		c.Assert(tsort[1], DeepEquals, deplC)
+		c.Assert(tsort[2], DeepEquals, deplB)
+		c.Assert(tsort[3], DeepEquals, deplE)
+		c.Assert(tsort[4], DeepEquals, deplA)
+	} else if tsort[0] == deplE {
+		c.Assert(tsort[0], DeepEquals, deplE)
+		c.Assert(tsort[1], DeepEquals, deplD)
+		c.Assert(tsort[2], DeepEquals, deplC)
+		c.Assert(tsort[3], DeepEquals, deplB)
+		c.Assert(tsort[4], DeepEquals, deplA)
+	} else {
+		c.Assert(false, Equals, true)
+	}
 }
 
 type hasItemChecker struct{}

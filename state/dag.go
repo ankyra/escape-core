@@ -18,13 +18,57 @@ package state
 
 import "fmt"
 
-type DAG struct {
+type DAG []*DAGNode
+
+type DAGNode struct {
 	Node    *DeploymentState
-	AndThen []*DAG
+	AndThen []*DAGNode
 }
 
-func (e *EnvironmentState) GetDeploymentStateDAG(stage string) ([]*DAG, error) {
-	result := []*DAG{}
+func NewDAGNode(d *DeploymentState) *DAGNode {
+	return &DAGNode{
+		Node:    d,
+		AndThen: []*DAGNode{},
+	}
+}
+
+func (roots DAG) DepthFirstWalk(withFunc func(*DeploymentState)) {
+	queue := roots
+	seen := map[*DAGNode]bool{}
+	for len(queue) > 0 {
+		q := queue[0]
+		queue = queue[1:]
+
+		// mark as seen; only process this node once
+		_, alreadySeen := seen[q]
+		if alreadySeen {
+			continue
+		}
+		seen[q] = true
+		withFunc(q.Node)
+
+		for _, d := range q.AndThen {
+			queue = append(queue, nil)
+			copy(queue[1:], queue)
+			queue[0] = d
+		}
+	}
+}
+
+func (e *EnvironmentState) GetDeploymentStateTopologicalSort(stage string) ([]*DeploymentState, error) {
+	dag, err := e.GetDeploymentStateDAG(stage)
+	if err != nil {
+		return nil, err
+	}
+	result := []*DeploymentState{}
+	dag.DepthFirstWalk(func(d *DeploymentState) {
+		result = append(result, d)
+	})
+	return result, nil
+}
+
+func (e *EnvironmentState) GetDeploymentStateDAG(stage string) (DAG, error) {
+	result := DAG{}
 	dependsOn := map[*DeploymentState][]*DeploymentState{}
 	roots := []*DeploymentState{}
 
@@ -40,7 +84,7 @@ func (e *EnvironmentState) GetDeploymentStateDAG(stage string) ([]*DAG, error) {
 				return nil, fmt.Errorf("Referencing unknown provider deployment '%s'", deplName)
 			}
 			if d == depl {
-				continue
+				return nil, fmt.Errorf("'%s' name is trying to consume itself", deplName)
 			}
 			deps, found := dependsOn[d]
 			if !found {
@@ -55,7 +99,8 @@ func (e *EnvironmentState) GetDeploymentStateDAG(stage string) ([]*DAG, error) {
 		}
 	}
 
-	dagMap := map[*DeploymentState]*DAG{}
+	// Walk the dependency graph
+	dagMap := map[*DeploymentState]*DAGNode{}
 	seen := map[*DeploymentState]bool{}
 	queue := roots
 	for len(queue) > 0 {
@@ -72,20 +117,14 @@ func (e *EnvironmentState) GetDeploymentStateDAG(stage string) ([]*DAG, error) {
 		// get the DAG for this Node, or create a new one
 		dag, found := dagMap[q]
 		if !found {
-			dag = &DAG{
-				Node:    q,
-				AndThen: []*DAG{},
-			}
+			dag = NewDAGNode(q)
 		}
 
 		// add downstream dependencies to DAG
 		for _, dep := range dependsOn[q] {
 			depDag, found := dagMap[dep]
 			if !found {
-				depDag = &DAG{
-					Node:    dep,
-					AndThen: []*DAG{},
-				}
+				depDag = NewDAGNode(dep)
 			}
 			dag.AndThen = append(dag.AndThen, depDag)
 			queue = append(queue, dep)
