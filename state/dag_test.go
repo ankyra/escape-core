@@ -110,15 +110,26 @@ func (s *suite) Test_GetDeploymentStateDAG(c *C) {
 	c.Assert(tsort, HasLen, 5)
 	if tsort[0] == deplD {
 		c.Assert(tsort[0], DeepEquals, deplD)
+		if tsort[1] == deplC {
+			c.Assert(tsort[2], DeepEquals, deplB)
+		} else if tsort[1] == deplB {
+			c.Assert(tsort[2], DeepEquals, deplC)
+		} else {
+			c.Assert(false, Equals, true)
+		}
 		c.Assert(tsort[1], DeepEquals, deplC)
-		c.Assert(tsort[2], DeepEquals, deplB)
 		c.Assert(tsort[3], DeepEquals, deplE)
 		c.Assert(tsort[4], DeepEquals, deplA)
 	} else if tsort[0] == deplE {
 		c.Assert(tsort[0], DeepEquals, deplE)
 		c.Assert(tsort[1], DeepEquals, deplD)
-		c.Assert(tsort[2], DeepEquals, deplC)
-		c.Assert(tsort[3], DeepEquals, deplB)
+		if tsort[2] == deplC {
+			c.Assert(tsort[3], DeepEquals, deplB)
+		} else if tsort[2] == deplB {
+			c.Assert(tsort[3], DeepEquals, deplC)
+		} else {
+			c.Assert(false, Equals, true)
+		}
 		c.Assert(tsort[4], DeepEquals, deplA)
 	} else {
 		c.Assert(false, Equals, true)

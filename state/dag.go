@@ -32,7 +32,7 @@ func NewDAGNode(d *DeploymentState) *DAGNode {
 	}
 }
 
-func (roots DAG) DepthFirstWalk(withFunc func(*DeploymentState)) {
+func (roots DAG) Walk(withFunc func(*DeploymentState)) {
 	queue := roots
 	seen := map[*DAGNode]bool{}
 	for len(queue) > 0 {
@@ -61,7 +61,7 @@ func (e *EnvironmentState) GetDeploymentStateTopologicalSort(stage string) ([]*D
 		return nil, err
 	}
 	result := []*DeploymentState{}
-	dag.DepthFirstWalk(func(d *DeploymentState) {
+	dag.Walk(func(d *DeploymentState) {
 		result = append(result, d)
 	})
 	return result, nil
