@@ -18,10 +18,11 @@ package core
 
 import (
 	"fmt"
-	"github.com/ankyra/escape-core/templates"
-	"github.com/ankyra/escape-core/variables"
 	"reflect"
 	"strconv"
+
+	"github.com/ankyra/escape-core/templates"
+	"github.com/ankyra/escape-core/variables"
 )
 
 type Change struct {
@@ -65,7 +66,35 @@ func (c Change) ToString() string {
 	return fmt.Sprintf("Remove '%s' from %s", c.PreviousValue, c.Field)
 }
 
+func (c Change) GetModification() string {
+	if !c.Added && !c.Removed {
+		return "change"
+	} else if c.Added {
+		return "add"
+	}
+	return "remove"
+}
+
 type Changes []Change
+
+func (changes Changes) Collapse() map[string]map[string]Changes {
+	result := map[string]map[string]Changes{}
+	for _, ch := range changes {
+		field, exists := result[ch.Field]
+		if !exists {
+			field = map[string]Changes{}
+		}
+		mod := ch.GetModification()
+		modifications, exists := field[mod]
+		if !exists {
+			modifications = Changes{}
+		}
+		modifications = append(modifications, ch)
+		field[mod] = modifications
+		result[ch.Field] = field
+	}
+	return result
+}
 
 func Diff(this *ReleaseMetadata, other *ReleaseMetadata) Changes {
 	return diff("", this, other)
