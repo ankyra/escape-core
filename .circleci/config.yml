@@ -18,11 +18,13 @@ jobs:
           mv /tmp/docker/* /usr/bin
 
   build_and_test:
+    steps:
     - run: 
         name: Build and test Escape release
         command: escape build && escape test
 
   release:
+    steps:
     - run: 
         name: Build Escape release
         command: escape release
