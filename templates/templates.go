@@ -25,6 +25,7 @@ import (
 	"github.com/cbroglie/mustache"
 )
 
+// A template describes a template.
 type Template struct {
 	File    string                 `json:"file"`
 	Target  string                 `json:"target"`

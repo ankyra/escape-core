@@ -21,15 +21,25 @@ import (
 	"net/url"
 )
 
+// Downloading files at build or deployment time is one of those common tasks
+// that Escape tries to cover.
+//
 type DownloadConfig struct {
+	// The URL to download from. This field is required.
+	//
+	// Example: `https://www.google.com/`
+	//
 	URL                   string   `json:"url"`
 	Dest                  string   `json:"dest"`
 	OverwriteExistingDest bool     `json:"overwrite" yaml:"overwrite"`
 	IfNotExists           []string `json:"if_not_exists" yaml:"if_not_exists"`
 	Unpack                bool     `json:"unpack"`
 	Platform              string   `json:"platform"`
-	Arch                  string   `json:"arch"`
-	Scopes                []string `json:"scopes" yaml:"scopes"`
+	// Only download if the architecture matches this string.
+	//
+	// Can be one of linux,
+	Arch   string   `json:"arch"`
+	Scopes []string `json:"scopes" yaml:"scopes"`
 }
 
 func NewDownloadConfig(url string) *DownloadConfig {

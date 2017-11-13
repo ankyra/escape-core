@@ -52,17 +52,51 @@ func GetJsonFieldFromTag(tag string) string {
 	return ""
 }
 
+func ParseType(expr ast.Expr) string {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		return t.Name
+	case *ast.SelectorExpr:
+		return ParseType(t.X) + "." + t.Sel.String() // probably wrong
+	case *ast.ArrayType:
+		return "[" + ParseType(t.Elt) + "]"
+	case *ast.StarExpr:
+		return ParseType(t.X)
+	case *ast.MapType:
+		return "{" + ParseType(t.Key) + ":" + ParseType(t.Value) + "}"
+	case *ast.InterfaceType:
+		return "any"
+	default:
+		fmt.Printf("%T\n", t)
+		panic("type not supported in documentation: ")
+	}
+	return ""
+}
+
 func StructTable(page Page, topLevelDoc string, s *ast.TypeSpec) string {
 	structType := s.Type.(*ast.StructType)
 	result := ""
 	for _, field := range structType.Fields.List {
-		doc := strings.TrimSpace(field.Doc.Text())
 		tag := GetJsonFieldFromTag(field.Tag.Value)
-		typ := ""
-		result += "|" + tag + "|" + typ + "|" + doc + "|\n"
+		typ := ParseType(field.Type)
+		result += "|" + tag + "|" + typ + "|"
+		doc := strings.TrimSpace(field.Doc.Text())
+		if doc != "" {
+			for _, line := range strings.Split(doc, "\n") {
+				if strings.HasPrefix(line, "#") {
+					line = line[1:]
+				}
+				line = strings.TrimSpace(line)
+				if line == "" {
+					result += "\n|||"
+				} else {
+					result += line + " "
+				}
+			}
+		}
+		result += "\n"
 	}
 	return fmt.Sprintf(PageHeader, page.Name, page.Slug, topLevelDoc, result)
-	return s.Name.String() + ": " + topLevelDoc + result
 }
 
 func GenerateStructDocs(f *ast.File, page Page) string {
