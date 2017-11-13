@@ -18,7 +18,7 @@ type Page struct {
 }
 
 var Pages = map[string]Page{
-	"consumer":  Page{"Consumers", "consumers", "consumer.go", "ConsumerConfig"},
+	"consumer":  Page{"Consumers", "providers-and-consumers", "consumer.go", "ConsumerConfig"},
 	"depends":   Page{"Dependencies", "dependencies", "dependency_config.go", "DependencyConfig"},
 	"downloads": Page{"Downloads", "downloads", "download_config.go", "DownloadConfig"},
 	"errands":   Page{"Errands", "errands", "errand.go", "Errand"},
@@ -79,7 +79,7 @@ func StructTable(page Page, topLevelDoc string, s *ast.TypeSpec) string {
 	for _, field := range structType.Fields.List {
 		tag := GetJsonFieldFromTag(field.Tag.Value)
 		typ := ParseType(field.Type)
-		result += "|" + tag + "|" + typ + "|"
+		result += "|" + tag + "|`" + typ + "`|"
 		doc := strings.TrimSpace(field.Doc.Text())
 		if doc != "" {
 			for _, line := range strings.Split(doc, "\n") {
