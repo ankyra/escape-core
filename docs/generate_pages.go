@@ -46,7 +46,8 @@ func GetJsonFieldFromTag(tag string) string {
 		s = strings.Trim(s, "`")
 		if strings.HasPrefix(s, "json:\"") {
 			s = s[6 : len(s)-1]
-			return s
+			parts := strings.Split(s, ",")
+			return parts[0]
 		}
 	}
 	return ""
