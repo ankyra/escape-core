@@ -9,3 +9,6 @@ go-test:
 
 fmt:
 	find -name '*.go' | grep -v .escape | grep -v vendor | xargs -n 1 go fmt
+
+docs-build:
+	escape run release -f --skip-tests --skip-deploy && cd ../escape/ && make docs-build && cd - 
