@@ -12,6 +12,28 @@ logo: logo.png
 metadata:
   release_metadata_api_version: "8"
 
+extends:
+- extension-golang-binary-latest
+
+inputs:
+- id: package_name
+  default: "github.com/ankyra/escape-core"
+  visible: false
+- id: escape_go_dependencies
+  type: list[string]
+  visible: false
+  default: []
+- id: copy_files_after_build
+  visible: false
+  default:
+  - "docs/generated:docs/"
+- id: build_command
+  default: "go build && go run docs/generate_stdlib_docs.go && go run docs/generate_pages.go"
+  visible: false
+- id: test_command
+  default: "go test -cover -v $(/usr/local/go/bin/go list ./... | grep -v docs )"
+  visible: false
+
 includes:
 - docs/
 - parsers/
@@ -25,9 +47,7 @@ includes:
 - LICENSE
 - README.md
 
-
-build: build.sh
-test: test.sh
+pre_build: prebuild.sh
 
 build_templates:
 - file: core.go.tpl

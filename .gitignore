@@ -2,3 +2,4 @@
 .escape/
 escape_state.json
 docs/generated/
+deps/
