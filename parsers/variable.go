@@ -6,7 +6,7 @@ import (
 )
 
 func InvalidVariableIdFormatError(v string) error {
-	return fmt.Errorf("Invalid variable id format '%s'", v)
+	return fmt.Errorf("Invalid variable format '%s'", v)
 }
 
 func InvalidVariableIdPreviousError(v string) error {

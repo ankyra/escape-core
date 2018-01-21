@@ -34,8 +34,9 @@ field of the Escape Plan.
 
 */
 type ConsumerConfig struct {
-	Name   string   `json:"name" yaml:"name"`
-	Scopes []string `json:"scopes" yaml:"scopes"`
+	Name         string   `json:"name" yaml:"name"`
+	Scopes       []string `json:"scopes" yaml:"scopes"`
+	VariableName string   `json:"variable" yaml:"variable"`
 }
 
 func NewConsumerConfig(name string) *ConsumerConfig {
