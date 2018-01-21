@@ -177,8 +177,10 @@ func (s *scriptSuite) Test_ToScriptEnvironment_adds_renamed_consumers(c *C) {
 	})
 	metadata := core.NewReleaseMetadata("test", "1.0")
 	cfg, _ := core.NewConsumerConfigFromString("test as t")
-	metadata.Consumes = []*core.ConsumerConfig{cfg}
+	cfg2, _ := core.NewConsumerConfigFromString("test as t2")
+	metadata.Consumes = []*core.ConsumerConfig{cfg, cfg2}
 	depl.SetProvider("build", "t", "archive-full")
+	depl.SetProvider("build", "t2", "archive-full")
 	env, err := ToScriptEnvironment(depl, metadata, "build", resolver)
 	c.Assert(err, IsNil)
 	c.Assert(script.IsDictAtom((*env)["$"]), Equals, true)
@@ -190,6 +192,7 @@ func (s *scriptSuite) Test_ToScriptEnvironment_adds_renamed_consumers(c *C) {
 	}
 	test_helper_check_script_environment(c, dict["this"], dicts, "archive-release")
 	test_helper_check_script_environment(c, dict["t"], dicts, "archive-full")
+	test_helper_check_script_environment(c, dict["t2"], dicts, "archive-full")
 }
 
 func (s *scriptSuite) Test_ToScriptEnvironment_fails_if_renamed_consumer_not_configured(c *C) {

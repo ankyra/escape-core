@@ -269,7 +269,7 @@ func (m *ReleaseMetadata) AddOutputVariable(output *variables.Variable) {
 
 func (m *ReleaseMetadata) AddConsumes(c *ConsumerConfig) {
 	for _, consumer := range m.Consumes {
-		if consumer.Name == c.Name {
+		if consumer.Name == c.Name && consumer.VariableName == c.VariableName {
 			if len(consumer.Scopes) < len(c.Scopes) {
 				consumer.Scopes = c.Scopes
 			}
