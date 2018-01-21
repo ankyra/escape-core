@@ -46,7 +46,11 @@ func ParseDependency(str string) (*ParsedDependency, error) {
 		if parts[1] != "as" {
 			return nil, fmt.Errorf("Unexpected '%s' expecting 'as' in '%s'", parts[1], str)
 		}
-		result.VariableName = parts[2]
+		id, err := ParseVariableIdent(parts[2])
+		if err != nil {
+			return nil, fmt.Errorf("Malformed dependency string '%s': %s", str, err.Error())
+		}
+		result.VariableName = id
 	}
 	result.QualifiedReleaseId = *releaseId
 	return result, nil
