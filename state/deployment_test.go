@@ -61,10 +61,10 @@ func (s *suite) Test_GetRootDeploymentStage(c *C) {
 	c.Assert(buildRootStage.GetRootDeploymentStage(), Equals, "build")
 }
 
-func (s *suite) Test_GetDependencyPath(c *C) {
-	c.Assert(depl.GetDependencyPath(), Equals, "archive-release")
-	c.Assert(fullDepl.GetDependencyPath(), Equals, "archive-full")
-	c.Assert(deplWithDeps.GetDependencyPath(), Equals, "archive-release-with-deps:archive-release")
+func (s *suite) Test_GetDeploymentPath(c *C) {
+	c.Assert(depl.GetDeploymentPath(), Equals, "archive-release")
+	c.Assert(fullDepl.GetDeploymentPath(), Equals, "archive-full")
+	c.Assert(deplWithDeps.GetDeploymentPath(), Equals, "archive-release-with-deps:archive-release")
 }
 
 func (s *suite) Test_GetDeploymentOrMakeNew(c *C) {

@@ -109,7 +109,7 @@ func (s *StateCompiler) CompileProviders(d *DeploymentState, metadata *core.Rele
 			}
 			return fmt.Errorf("No provider of type '%s' was configured in the deployment state.", consumes)
 		}
-		deplState, err := d.GetEnvironmentState().LookupDeploymentState(deplName)
+		deplState, err := d.GetEnvironmentState().ResolveDeploymentPath(stage, deplName)
 		if err != nil {
 			return err
 		}
@@ -175,6 +175,6 @@ func (s *StateCompiler) CompileState(d *DeploymentState, metadata *core.ReleaseM
 	env := d.GetEnvironmentState()
 	result["project"] = script.LiftString(env.GetProjectName())
 	result["environment"] = script.LiftString(env.Name)
-	result["deployment"] = script.LiftString(d.Name)
+	result["deployment"] = script.LiftString(d.GetDeploymentPath())
 	return script.LiftDict(result)
 }
