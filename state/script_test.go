@@ -87,44 +87,6 @@ func (s *scriptSuite) Test_ToScriptEnvironment_adds_dependencies(c *C) {
 	test_helper_check_script_environment(c, dict["archive-dep"], dicts, "archive-full:_/archive-dep")
 }
 
-func (s *scriptSuite) Test_ToScriptEnvironment_honours_variable_context(c *C) {
-	resolver := newResolverFromMap(map[string]*core.ReleaseMetadata{
-		"_/test-v1.0": core.NewReleaseMetadata("test", "1.0"),
-	})
-	metadata := core.NewReleaseMetadata("test", "1.0")
-	metadata.SetDependencies([]string{"test-v1.0 as renamed_via_dep"})
-	metadata.SetVariableInContext("renamed", "renamed_via_dep")
-	metadata.SetVariableInContext("renamed_parent", "this")
-
-	env, err := ToScriptEnvironment(fullDepl, metadata, "build", resolver)
-	c.Assert(err, IsNil)
-	c.Assert(script.IsDictAtom((*env)["$"]), Equals, true)
-	dict := script.ExpectDictAtom((*env)["$"])
-	dicts := map[string][]string{
-		"inputs":   []string{},
-		"outputs":  []string{},
-		"metadata": []string{},
-	}
-	test_helper_check_script_environment(c, dict["this"], dicts, "archive-full")
-	test_helper_check_script_environment(c, dict["renamed_parent"], dicts, "archive-full")
-	test_helper_check_script_environment(c, dict["renamed_via_dep"], dicts, "archive-full:_/test")
-	test_helper_check_script_environment(c, dict["renamed"], dicts, "archive-full:_/test")
-}
-
-func (s *scriptSuite) Test_ToScriptEnvironment_ignores_missing_variables_in_variable_context(c *C) {
-	resolver := newResolverFromMap(map[string]*core.ReleaseMetadata{
-		"_/test-v1.0": core.NewReleaseMetadata("test", "1.0"),
-	})
-	metadata := core.NewReleaseMetadata("test", "1.0")
-	metadata.SetDependencies([]string{"test-v1.0"})
-	metadata.SetVariableInContext("ddoesnae-exist", "doesnt-exist-1.0")
-	env, err := ToScriptEnvironment(fullDepl, metadata, "build", resolver)
-	c.Assert(err, IsNil)
-	c.Assert(script.IsDictAtom((*env)["$"]), Equals, true)
-	dict := script.ExpectDictAtom((*env)["$"])
-	c.Assert(dict["ddoesnae-exist"], IsNil)
-}
-
 func (s *scriptSuite) Test_ToScriptEnvironment_doesnt_add_dependencies_that_are_not_in_metadata(c *C) {
 	resolver := newResolverFromMap(map[string]*core.ReleaseMetadata{})
 	metadata := core.NewReleaseMetadata("test", "1.0")
