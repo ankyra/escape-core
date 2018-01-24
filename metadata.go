@@ -379,7 +379,11 @@ func (m *ReleaseMetadata) AddDependency(dep *DependencyConfig) {
 }
 
 func (m *ReleaseMetadata) AddDependencyFromString(dep string) {
-	m.Depends = append(m.Depends, NewDependencyConfig(dep))
+	cfg := NewDependencyConfig(dep)
+	if err := cfg.Validate(m); err != nil {
+		panic(err)
+	}
+	m.Depends = append(m.Depends, cfg)
 }
 
 func (m *ReleaseMetadata) SetDependencies(deps []string) {
