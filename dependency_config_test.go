@@ -65,19 +65,19 @@ func (s *metadataSuite) Test_NewDependencyConfig_Validate_fails_if_invalid_depen
 }
 
 func (s *metadataSuite) Test_NewDependencyConfig_fails_if_version_needs_resolving(c *C) {
-	cases := []string{
-		"my-dependency-latest",
-		"my-dependency-v1.0.@",
-		"my-dependency-v0.@",
-		"my-dependency-v@",
-		"my-dependency-@",
+	cases := map[string]string{
+		"my-dependency-latest": "_/my-dependency-latest",
+		"my-dependency-v1.0.@": "_/my-dependency-v1.0.@",
+		"my-dependency-v0.@":   "_/my-dependency-v0.@",
+		"my-dependency-v@":     "_/my-dependency-latest",
+		"my-dependency-@":      "_/my-dependency-latest",
 	}
-	for _, test := range cases {
+	for test, normalized := range cases {
 		metadata := NewReleaseMetadata("name", "1.0")
 		dep := NewDependencyConfig(test)
 		dep.BuildMapping = nil
 		dep.DeployMapping = nil
-		c.Assert(dep.Validate(metadata), DeepEquals, DependencyNeedsResolvingError(test))
+		c.Assert(dep.Validate(metadata), DeepEquals, DependencyNeedsResolvingError(normalized))
 	}
 }
 

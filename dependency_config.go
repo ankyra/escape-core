@@ -123,6 +123,31 @@ func DependencyNeedsResolvingError(dependencyReleaseId string) error {
 	return fmt.Errorf("The dependency '%s' needs its version resolved.", dependencyReleaseId)
 }
 
+func (d *DependencyConfig) EnsureConfigIsParsed() error {
+	parsed, err := parsers.ParseDependency(d.ReleaseId)
+	if err != nil {
+		return err
+	}
+	d.ReleaseId = parsed.QualifiedReleaseId.ToString()
+	d.Project = parsed.Project
+	d.Name = parsed.Name
+	d.Version = parsed.Version
+	if d.VariableName == "" {
+		d.VariableName = parsed.VariableName
+		if parsed.VariableName == "" {
+			d.VariableName = parsed.Name
+		}
+	}
+	if d.DeploymentName == "" {
+		d.DeploymentName = parsed.Project + "/" + parsed.Name
+	}
+	return nil
+}
+
+func (d *DependencyConfig) NeedsResolving() bool {
+	return d.Version == "latest" || strings.HasSuffix(d.Version, ".@")
+}
+
 func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	if d.BuildMapping == nil {
 		d.BuildMapping = map[string]interface{}{}
@@ -133,23 +158,11 @@ func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	if d.Scopes == nil || len(d.Scopes) == 0 {
 		d.Scopes = []string{"build", "deploy"}
 	}
-	parsed, err := parsers.ParseDependency(d.ReleaseId)
-	if err != nil {
+	if err := d.EnsureConfigIsParsed(); err != nil {
 		return err
 	}
-	if parsed.Version == "latest" || strings.HasSuffix(parsed.Version, ".@") {
+	if d.NeedsResolving() {
 		return DependencyNeedsResolvingError(d.ReleaseId)
-	}
-	d.ReleaseId = parsed.Project + "/" + parsed.Name + "-v" + parsed.Version
-	d.Project = parsed.Project
-	d.Name = parsed.Name
-	d.Version = parsed.Version
-	d.VariableName = parsed.VariableName
-	if d.VariableName == "" {
-		d.VariableName = d.Name
-	}
-	if d.DeploymentName == "" {
-		d.DeploymentName = parsed.Project + "/" + parsed.Name
 	}
 	return nil
 }
