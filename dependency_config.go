@@ -134,9 +134,6 @@ func (d *DependencyConfig) EnsureConfigIsParsed() error {
 	d.Version = parsed.Version
 	if d.VariableName == "" {
 		d.VariableName = parsed.VariableName
-		if parsed.VariableName == "" {
-			d.VariableName = parsed.Name
-		}
 	}
 	return nil
 }
@@ -169,8 +166,12 @@ func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	if d.NeedsResolving() {
 		return DependencyNeedsResolvingError(d.ReleaseId)
 	}
+	d.DeploymentName = d.VariableName
 	if d.DeploymentName == "" {
 		d.DeploymentName = d.Project + "/" + d.Name
+	}
+	if d.VariableName == "" {
+		d.VariableName = d.Project + "/" + d.Name
 	}
 	return nil
 }
