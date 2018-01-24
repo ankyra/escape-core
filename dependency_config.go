@@ -148,6 +148,14 @@ func (d *DependencyConfig) NeedsResolving() bool {
 	return d.Version == "latest" || strings.HasSuffix(d.Version, ".@")
 }
 
+func (d *DependencyConfig) GetVersionAsString() (version string) {
+	version = "v" + d.Version
+	if d.Version == "latest" {
+		version = d.Version
+	}
+	return version
+}
+
 func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 	if d.BuildMapping == nil {
 		d.BuildMapping = map[string]interface{}{}
