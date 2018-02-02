@@ -48,6 +48,54 @@ func (s *suite) SetUpTest(c *C) {
 	deployedDepsDepl = dep.GetDeploymentOrMakeNew("build", "archive-release")
 }
 
+func (s *suite) Test_Deployment_NewDeploymentState(c *C) {
+	d := NewDeploymentState(nil, "name", "project/application")
+	c.Assert(d.Name, Equals, "name")
+	c.Assert(d.Release, Equals, "project/application")
+	c.Assert(d.Stages, Not(IsNil))
+	c.Assert(d.Inputs, Not(IsNil))
+	c.Assert(d.environment, IsNil)
+}
+
+func (s *suite) Test_Deployment_validateAndFix_fixes_nils(c *C) {
+	d := NewDeploymentState(nil, "name", "project/application")
+	d.Stages = nil
+	d.Inputs = nil
+	c.Assert(d.validateAndFix("name", nil), IsNil)
+	c.Assert(d.Stages, Not(IsNil))
+	c.Assert(d.Inputs, Not(IsNil))
+}
+
+func (s *suite) Test_Deployment_validateAndFix_fails_on_invalid_name(c *C) {
+	cases := []string{
+		"",
+		"/",
+		".",
+		",",
+		"$",
+		"^",
+		"-",
+	}
+	for _, test := range cases {
+		d := NewDeploymentState(nil, "name", "project/application")
+		c.Assert(d.validateAndFix(test, nil), DeepEquals, InvalidDeploymentNameError(test))
+	}
+}
+
+func (s *suite) Test_Deployment_validateAndFix_valid_names(c *C) {
+	cases := []string{
+		"_",
+		"_/test",
+		"_/test-test",
+		"test",
+		"t",
+	}
+	for _, test := range cases {
+		d := NewDeploymentState(nil, "name", "project/application")
+		c.Assert(d.validateAndFix(test, nil), IsNil)
+	}
+}
+
 func (s *suite) Test_GetRootDeploymentName(c *C) {
 	c.Assert(depl.GetRootDeploymentName(), Equals, "archive-release")
 	c.Assert(fullDepl.GetRootDeploymentName(), Equals, "archive-full")

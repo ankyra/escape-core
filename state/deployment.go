@@ -19,10 +19,16 @@ package state
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/ankyra/escape-core"
 )
+
+func InvalidDeploymentNameError(name string) error {
+	return fmt.Errorf("Sorry, the deployment name '%s' is not allowed. Expected a string matching /%s/",
+		name, deploymentNameRegexFmt)
+}
 
 type DeploymentState struct {
 	Name        string                 `json:"name"`
@@ -33,6 +39,9 @@ type DeploymentState struct {
 	parent      *DeploymentState       `json:"-"`
 	parentStage *StageState            `json:"-"`
 }
+
+var deploymentNameRegexFmt = "^[a-z_]+[a-z0-9-_/]*$"
+var deploymentNameRegex = regexp.MustCompile(deploymentNameRegexFmt)
 
 func NewDeploymentState(env *EnvironmentState, name, release string) *DeploymentState {
 	return &DeploymentState{
@@ -269,11 +278,11 @@ func (d *DeploymentState) getDependencyStages(startStage string) []*StageState {
 }
 
 func (d *DeploymentState) validateAndFix(name string, env *EnvironmentState) error {
+	if !deploymentNameRegex.MatchString(name) {
+		return InvalidDeploymentNameError(name)
+	}
 	d.Name = name
 	d.environment = env
-	if d.Name == "" {
-		return fmt.Errorf("Deployment name is missing from DeploymentState")
-	}
 	if d.Release == "" {
 		d.Release = name
 	}

@@ -71,7 +71,7 @@ func (e *EnvironmentState) Save(d *DeploymentState) error {
 }
 
 func (e *EnvironmentState) ValidateAndFix(name string, project *ProjectState) error {
-	if name == "" || !environmentNameRegex.MatchString(name) {
+	if !environmentNameRegex.MatchString(name) {
 		return InvalidEnvironmentNameError(name)
 	}
 	e.Name = name
