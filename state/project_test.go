@@ -47,22 +47,7 @@ func (s *suite) Test_Project_ValidateAndFix_fixes_nil(c *C) {
 }
 
 func (s *suite) Test_Project_ValidateAndFix_fails_on_invalid_project_names(c *C) {
-	cases := []string{
-		"",
-		"/",
-		"$",
-		"a",
-		"a/",
-		"a$",
-		"a^",
-		"a*",
-		" ",
-		"   asddas",
-		"@",
-		"aa>",
-		"<script",
-	}
-	for _, test := range cases {
+	for _, test := range validate.InvalidStateProjectNames {
 		p, err := NewProjectState(test)
 		c.Assert(err, DeepEquals, validate.InvalidProjectNameError(test))
 		p.Name = test
@@ -71,15 +56,7 @@ func (s *suite) Test_Project_ValidateAndFix_fails_on_invalid_project_names(c *C)
 }
 
 func (s *suite) Test_Project_ValidateAndFix_valid_names(c *C) {
-	cases := []string{
-		"aa",
-		"ab",
-		"test-etsts",
-		"test_test",
-		"t_____",
-		"t------",
-	}
-	for _, test := range cases {
+	for _, test := range validate.ValidStateProjectNames {
 		p, err := NewProjectState(test)
 		c.Assert(err, IsNil)
 		p.Name = test

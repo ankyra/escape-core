@@ -38,20 +38,29 @@ func (s *suite) SetUpTest(c *C) {
 	env, err := p.GetEnvironmentStateOrMakeNew("dev")
 	c.Assert(err, IsNil)
 
-	depl = env.GetOrCreateDeploymentState("archive-release")
-	fullDepl = env.GetOrCreateDeploymentState("archive-full")
+	depl, err = env.GetOrCreateDeploymentState("archive-release")
+	c.Assert(err, IsNil)
+	fullDepl, err = env.GetOrCreateDeploymentState("archive-full")
+	c.Assert(err, IsNil)
 
-	dep := env.GetOrCreateDeploymentState("archive-release-with-deps")
-	deplWithDeps = dep.GetDeploymentOrMakeNew("deploy", "archive-release")
-	dep2 := dep.GetDeploymentOrMakeNew("build", "build-release")
-	buildRootStage = dep2.GetDeploymentOrMakeNew("deploy", "build-root-release")
+	dep, err := env.GetOrCreateDeploymentState("archive-release-with-deps")
+	c.Assert(err, IsNil)
+	deplWithDeps, err = dep.GetDeploymentOrMakeNew("deploy", "archive-release")
+	c.Assert(err, IsNil)
+	dep2, err := dep.GetDeploymentOrMakeNew("build", "build-release")
+	c.Assert(err, IsNil)
+	buildRootStage, err = dep2.GetDeploymentOrMakeNew("deploy", "build-root-release")
+	c.Assert(err, IsNil)
 
-	dep = env.GetOrCreateDeploymentState("archive-release-deployed-deps")
-	deployedDepsDepl = dep.GetDeploymentOrMakeNew("build", "archive-release")
+	dep, err = env.GetOrCreateDeploymentState("archive-release-deployed-deps")
+	c.Assert(err, IsNil)
+	deployedDepsDepl, err = dep.GetDeploymentOrMakeNew("build", "archive-release")
+	c.Assert(err, IsNil)
 }
 
 func (s *suite) Test_Deployment_NewDeploymentState(c *C) {
-	d := NewDeploymentState(nil, "name", "project/application")
+	d, err := NewDeploymentState(nil, "name", "project/application")
+	c.Assert(err, IsNil)
 	c.Assert(d.Name, Equals, "name")
 	c.Assert(d.Release, Equals, "project/application")
 	c.Assert(d.Stages, Not(IsNil))
@@ -60,7 +69,8 @@ func (s *suite) Test_Deployment_NewDeploymentState(c *C) {
 }
 
 func (s *suite) Test_Deployment_validateAndFix_fixes_nils(c *C) {
-	d := NewDeploymentState(nil, "name", "project/application")
+	d, err := NewDeploymentState(nil, "name", "project/application")
+	c.Assert(err, IsNil)
 	d.Stages = nil
 	d.Inputs = nil
 	c.Assert(d.validateAndFix("name", nil), IsNil)
@@ -69,31 +79,17 @@ func (s *suite) Test_Deployment_validateAndFix_fixes_nils(c *C) {
 }
 
 func (s *suite) Test_Deployment_validateAndFix_fails_on_invalid_name(c *C) {
-	cases := []string{
-		"",
-		"/",
-		".",
-		",",
-		"$",
-		"^",
-		"-",
-	}
-	for _, test := range cases {
-		d := NewDeploymentState(nil, "name", "project/application")
+	for _, test := range validate.InvalidDeploymentNames {
+		d, err := NewDeploymentState(nil, "name", "project/application")
+		c.Assert(err, IsNil)
 		c.Assert(d.validateAndFix(test, nil), DeepEquals, validate.InvalidDeploymentNameError(test))
 	}
 }
 
 func (s *suite) Test_Deployment_validateAndFix_valid_names(c *C) {
-	cases := []string{
-		"_",
-		"_/test",
-		"_/test-test",
-		"test",
-		"t",
-	}
-	for _, test := range cases {
-		d := NewDeploymentState(nil, "name", "project/application")
+	for _, test := range validate.ValidDeploymentNames {
+		d, err := NewDeploymentState(nil, "name", "project/application")
+		c.Assert(err, IsNil)
 		c.Assert(d.validateAndFix(test, nil), IsNil)
 		c.Assert(d.Name, Equals, test)
 	}
@@ -123,13 +119,22 @@ func (s *suite) Test_GetDeploymentOrMakeNew(c *C) {
 	c.Assert(depDepl.Name, Equals, "archive-release")
 	c.Assert(depDepl.parentStage.Name, Equals, "build")
 
-	depDepl2 := depDepl.GetDeploymentOrMakeNew("deploy", "deploy-dep-name")
+	depDepl2, err := depDepl.GetDeploymentOrMakeNew("deploy", "deploy-dep-name")
+	c.Assert(err, IsNil)
 	c.Assert(depDepl2.Name, Equals, "deploy-dep-name")
 	c.Assert(depDepl2.parentStage.Name, Equals, "deploy")
 
-	depDepl3 := depDepl2.GetDeploymentOrMakeNew("deploy", "deploy-dep-name")
+	depDepl3, err := depDepl2.GetDeploymentOrMakeNew("deploy", "deploy-dep-name")
+	c.Assert(err, IsNil)
 	c.Assert(depDepl3.Name, Equals, "deploy-dep-name")
 	c.Assert(depDepl3.parentStage.Name, Equals, "deploy")
+}
+
+func (s *suite) Test_GetDeploymentOrMakeNew_fails_on_invalid_deployment_names(c *C) {
+	for _, test := range validate.InvalidDeploymentNames {
+		_, err := deployedDepsDepl.GetDeploymentOrMakeNew(DeployStage, test)
+		c.Assert(err, DeepEquals, validate.InvalidDeploymentNameError(test))
+	}
 }
 
 func (s *suite) Test_GetPreStepInputs_for_dependency_uses_parent_build_stage(c *C) {
@@ -138,7 +143,10 @@ func (s *suite) Test_GetPreStepInputs_for_dependency_uses_parent_build_stage(c *
 }
 
 func (s *suite) Test_GetPreStepInputs_for_nested_dependency_uses_parent_build_stage(c *C) {
-	nestedDepl := deployedDepsDepl.GetDeploymentOrMakeNew("deploy", "nested1").GetDeploymentOrMakeNew("deploy", "nested2")
+	parentDepl, err := deployedDepsDepl.GetDeploymentOrMakeNew("deploy", "nested1")
+	c.Assert(err, IsNil)
+	nestedDepl, err := parentDepl.GetDeploymentOrMakeNew("deploy", "nested2")
+	c.Assert(err, IsNil)
 	inputs := nestedDepl.GetPreStepInputs("deploy")
 	c.Assert(inputs["variable"], Equals, "build_variable")
 }
@@ -196,8 +204,10 @@ func (s *suite) Test_GetProviders_includes_parent_build_providers_for_dep(c *C) 
 	c.Assert(err, IsNil)
 	env, err := p.GetEnvironmentStateOrMakeNew("dev")
 	c.Assert(err, IsNil)
-	dep := env.GetOrCreateDeploymentState("archive-release-with-deps")
-	deplWithDeps = dep.GetDeploymentOrMakeNew("build", "archive-release")
+	dep, err := env.GetOrCreateDeploymentState("archive-release-with-deps")
+	c.Assert(err, IsNil)
+	deplWithDeps, err = dep.GetDeploymentOrMakeNew("build", "archive-release")
+	c.Assert(err, IsNil)
 	providers := deplWithDeps.GetProviders("deploy")
 	c.Assert(providers, HasLen, 3)
 	c.Assert(providers["kubernetes"], Equals, "archive-release")

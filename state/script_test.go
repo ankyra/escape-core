@@ -35,10 +35,14 @@ func (s *scriptSuite) SetUpTest(c *C) {
 	c.Assert(err, IsNil)
 	env, err := prj.GetEnvironmentStateOrMakeNew("dev")
 	c.Assert(err, IsNil)
-	depl = env.GetOrCreateDeploymentState("archive-release")
-	fullDepl = env.GetOrCreateDeploymentState("archive-full")
-	dep := env.GetOrCreateDeploymentState("archive-release-with-deps")
-	deplWithDeps = dep.GetDeploymentOrMakeNew("deploy", "archive-release")
+	depl, err = env.GetOrCreateDeploymentState("archive-release")
+	c.Assert(err, IsNil)
+	fullDepl, err = env.GetOrCreateDeploymentState("archive-full")
+	c.Assert(err, IsNil)
+	dep, err := env.GetOrCreateDeploymentState("archive-release-with-deps")
+	c.Assert(err, IsNil)
+	deplWithDeps, err = dep.GetDeploymentOrMakeNew("deploy", "archive-release")
+	c.Assert(err, IsNil)
 }
 
 func (s *scriptSuite) Test_ToScript(c *C) {

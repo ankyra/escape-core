@@ -28,7 +28,8 @@ func DeploymentDoesNotExistError(deploymentName string) error {
 }
 
 func DeploymentPathResolveError(stage, deploymentPath, deploymentName string) error {
-	return fmt.Errorf("Failed to resolve deployment path '%s': the deployment '%s' could not be found in the %s stage", deploymentPath, deploymentName, stage)
+	return fmt.Errorf("Failed to resolve deployment path '%s': the deployment '%s' could not be found in the %s stage",
+		deploymentPath, deploymentName, stage)
 }
 
 type EnvironmentState struct {
@@ -113,19 +114,23 @@ func (e *EnvironmentState) ResolveDeploymentPath(stage, deploymentPath string) (
 	return val, nil
 }
 
-func (e *EnvironmentState) GetOrCreateDeploymentState(deploymentName string) *DeploymentState {
+func (e *EnvironmentState) GetOrCreateDeploymentState(deploymentName string) (*DeploymentState, error) {
 	depl, ok := e.Deployments[deploymentName]
 	if !ok {
-		depl = NewDeploymentState(e, deploymentName, deploymentName)
+		depl, err := NewDeploymentState(e, deploymentName, deploymentName)
+		if err != nil {
+			return nil, err
+		}
 		e.Deployments[deploymentName] = depl
+		return depl, nil
 	}
-	return depl
+	return depl, nil
 }
 
 func (e *EnvironmentState) GetProviders() map[string][]string {
 	result := map[string][]string{}
 	for deplName, depl := range e.Deployments {
-		st := depl.GetStageOrCreateNew("deploy")
+		st := depl.GetStageOrCreateNew(DeployStage)
 		for _, provides := range st.Provides {
 			result[provides] = append(result[provides], deplName)
 		}
@@ -136,7 +141,7 @@ func (e *EnvironmentState) GetProviders() map[string][]string {
 func (e *EnvironmentState) GetProvidersOfType(typ string) []string {
 	result := []string{}
 	for deplName, depl := range e.Deployments {
-		st := depl.GetStageOrCreateNew("deploy")
+		st := depl.GetStageOrCreateNew(DeployStage)
 		for _, provides := range st.Provides {
 			if provides == typ {
 				result = append(result, deplName)

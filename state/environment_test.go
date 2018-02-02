@@ -44,14 +44,7 @@ func (s *suite) Test_Environment_ValidateAndFix_fixes_nils(c *C) {
 }
 
 func (s *suite) Test_Environment_ValidateAndFix_fails_on_invalid_name(c *C) {
-	cases := []string{
-		"",
-		".../../",
-		"$",
-		"@",
-		":",
-	}
-	for _, test := range cases {
+	for _, test := range validate.InvalidEnvironmentNames {
 		e, err := NewEnvironmentState("ci", nil)
 		c.Assert(err, IsNil)
 		c.Assert(e.ValidateAndFix(test, nil), DeepEquals, validate.InvalidEnvironmentNameError(test))
@@ -59,17 +52,7 @@ func (s *suite) Test_Environment_ValidateAndFix_fails_on_invalid_name(c *C) {
 }
 
 func (s *suite) Test_Environment_ValidateAndFix_valid_names(c *C) {
-	cases := []string{
-		"ci",
-		"dev",
-		"prod",
-		"a",
-		"a1",
-		"a-1",
-		"a-_2",
-		"a________3",
-	}
-	for _, test := range cases {
+	for _, test := range validate.ValidEnvironmentNames {
 		e, err := NewEnvironmentState("ci", nil)
 		c.Assert(err, IsNil)
 		c.Assert(e.ValidateAndFix(test, nil), IsNil)
@@ -112,7 +95,8 @@ func (s *suite) Test_Environment_GetOrCreateDeploymentState_no_deps(c *C) {
 	c.Assert(err, IsNil)
 	env, err := p.GetEnvironmentStateOrMakeNew("dev")
 	c.Assert(err, IsNil)
-	depl := env.GetOrCreateDeploymentState("archive-release")
+	depl, err := env.GetOrCreateDeploymentState("archive-release")
+	c.Assert(err, IsNil)
 	c.Assert(depl.Name, Equals, "archive-release")
 	c.Assert(depl.Inputs["input_variable"], DeepEquals, "depl_override")
 	c.Assert(depl.Inputs["list_input"], DeepEquals, []interface{}{"depl_override"})
@@ -123,9 +107,19 @@ func (s *suite) Test_Environment_GetOrCreateDeploymentState_doesnt_exist_no_deps
 	c.Assert(err, IsNil)
 	env, err := p.GetEnvironmentStateOrMakeNew("dev")
 	c.Assert(err, IsNil)
-	depl := env.GetOrCreateDeploymentState("doesnt-exist")
+	depl, err := env.GetOrCreateDeploymentState("doesnt-exist")
+	c.Assert(err, IsNil)
 	c.Assert(depl.Name, Equals, "doesnt-exist")
 	c.Assert(depl.Inputs, HasLen, 0)
+}
+
+func (s *suite) Test_Environment_GetOrCreateDeploymentState_fails_on_invalid_name(c *C) {
+	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
+	c.Assert(err, IsNil)
+	env, err := p.GetEnvironmentStateOrMakeNew("dev")
+	c.Assert(err, IsNil)
+	_, err = env.GetOrCreateDeploymentState("$")
+	c.Assert(err, DeepEquals, validate.InvalidDeploymentNameError("$"))
 }
 
 func (s *suite) Test_Environment_GetProviders(c *C) {
@@ -133,7 +127,8 @@ func (s *suite) Test_Environment_GetProviders(c *C) {
 	c.Assert(err, IsNil)
 	env, err := p.GetEnvironmentStateOrMakeNew("dev")
 	c.Assert(err, IsNil)
-	depl := env.GetOrCreateDeploymentState("provider")
+	depl, err := env.GetOrCreateDeploymentState("provider")
+	c.Assert(err, IsNil)
 	metadata := core.NewReleaseMetadata("test", "1")
 	metadata.SetProvides([]string{"test-provider"})
 	depl.CommitVersion("deploy", metadata)
@@ -147,7 +142,8 @@ func (s *suite) Test_Environment_GetProvidersOfType(c *C) {
 	c.Assert(err, IsNil)
 	env, err := p.GetEnvironmentStateOrMakeNew("dev")
 	c.Assert(err, IsNil)
-	depl := env.GetOrCreateDeploymentState("provider")
+	depl, err := env.GetOrCreateDeploymentState("provider")
+	c.Assert(err, IsNil)
 	metadata := core.NewReleaseMetadata("test", "1")
 	metadata.SetProvides([]string{"test-provider"})
 	depl.CommitVersion("deploy", metadata)
@@ -169,19 +165,22 @@ func (s *suite) Test_Environment_ResolveDeploymentPath(c *C) {
 	_, err = env.ResolveDeploymentPath("build", "test")
 	c.Assert(err, DeepEquals, DeploymentDoesNotExistError("test"))
 
-	depl := env.GetOrCreateDeploymentState("test")
+	depl, err := env.GetOrCreateDeploymentState("test")
+	c.Assert(err, IsNil)
 	returnedDepl, err := env.ResolveDeploymentPath("deploy", "test")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, depl)
 
-	deplDep := depl.GetDeploymentOrMakeNew("deploy", "test-dependency")
+	deplDep, err := depl.GetDeploymentOrMakeNew("deploy", "test-dependency")
+	c.Assert(err, IsNil)
 	returnedDepl, err = env.ResolveDeploymentPath("deploy", "test:test-dependency")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, deplDep)
 	_, err = env.ResolveDeploymentPath("build", "test:test-dependency")
 	c.Assert(err, DeepEquals, DeploymentPathResolveError("build", "test:test-dependency", "test-dependency"))
 
-	deplDep2 := deplDep.GetDeploymentOrMakeNew("deploy", "test-dependency2")
+	deplDep2, err := deplDep.GetDeploymentOrMakeNew("deploy", "test-dependency2")
+	c.Assert(err, IsNil)
 	returnedDepl, err = env.ResolveDeploymentPath("deploy", "test:test-dependency:test-dependency2")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, deplDep2)
@@ -192,12 +191,14 @@ func (s *suite) Test_Environment_ResolveDeploymentPath_with_build_stage(c *C) {
 	env, err := proj.GetEnvironmentStateOrMakeNew("env")
 	c.Assert(err, IsNil)
 
-	depl := env.GetOrCreateDeploymentState("test")
+	depl, err := env.GetOrCreateDeploymentState("test")
+	c.Assert(err, IsNil)
 	returnedDepl, err := env.ResolveDeploymentPath("build", "test")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, depl)
 
-	deplDep := depl.GetDeploymentOrMakeNew("build", "test-dependency")
+	deplDep, err := depl.GetDeploymentOrMakeNew("build", "test-dependency")
+	c.Assert(err, IsNil)
 	returnedDepl, err = env.ResolveDeploymentPath("build", "test:test-dependency")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, deplDep)
