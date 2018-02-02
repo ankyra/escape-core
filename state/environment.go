@@ -18,8 +18,14 @@ package state
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+func InvalidEnvironmentNameError(name string) error {
+	return fmt.Errorf("Sorry, the environment name '%s' is not allowed. Expected name matching /%s/",
+		name, environmentNameRegexFmt)
+}
 
 func DeploymentDoesNotExistError(deploymentName string) error {
 	return fmt.Errorf("Deployment '%s' does not exist", deploymentName)
@@ -45,6 +51,9 @@ func NewEnvironmentState(envName string, project *ProjectState) *EnvironmentStat
 	}
 }
 
+var environmentNameRegexFmt = "^[a-z]+[a-z0-9-_]*$"
+var environmentNameRegex = regexp.MustCompile(environmentNameRegexFmt)
+
 func (e *EnvironmentState) GetDeployments() []*DeploymentState {
 	result := []*DeploymentState{}
 	for _, d := range e.Deployments {
@@ -62,8 +71,14 @@ func (e *EnvironmentState) Save(d *DeploymentState) error {
 }
 
 func (e *EnvironmentState) ValidateAndFix(name string, project *ProjectState) error {
+	if name == "" || !environmentNameRegex.MatchString(name) {
+		return InvalidEnvironmentNameError(name)
+	}
 	e.Name = name
 	e.Project = project
+	if e.Inputs == nil {
+		e.Inputs = map[string]interface{}{}
+	}
 	if e.Deployments == nil {
 		e.Deployments = map[string]*DeploymentState{}
 	}
@@ -71,9 +86,6 @@ func (e *EnvironmentState) ValidateAndFix(name string, project *ProjectState) er
 		if err := depl.validateAndFix(deplName, e); err != nil {
 			return err
 		}
-	}
-	if e.Name == "" {
-		return fmt.Errorf("Environment name is missing from the EnvironmentState")
 	}
 	return nil
 }

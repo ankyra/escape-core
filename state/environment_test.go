@@ -21,14 +21,64 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func (s *suite) Test_Name_Field_Is_Set(c *C) {
+func (s *suite) Test_NewEnvironmentState(c *C) {
+	e := NewEnvironmentState("ci", nil)
+	c.Assert(e.Name, Equals, "ci")
+	c.Assert(e.Inputs, Not(IsNil))
+	c.Assert(e.Deployments, Not(IsNil))
+	c.Assert(e.Project, IsNil)
+}
+
+func (s *suite) Test_Environment_ValidateAndFix_fixes_nils(c *C) {
+	e := NewEnvironmentState("ci", nil)
+	e.Inputs = nil
+	e.Deployments = nil
+	e.Project = nil
+	c.Assert(e.ValidateAndFix("ci", nil), IsNil)
+	c.Assert(e.Inputs, Not(IsNil))
+	c.Assert(e.Deployments, Not(IsNil))
+	c.Assert(e.Project, IsNil)
+}
+
+func (s *suite) Test_Environment_ValidateAndFix_fails_on_invalid_name(c *C) {
+	cases := []string{
+		"",
+		".../../",
+		"$",
+		"@",
+		":",
+	}
+	for _, test := range cases {
+		e := NewEnvironmentState("ci", nil)
+		c.Assert(e.ValidateAndFix(test, nil), DeepEquals, InvalidEnvironmentNameError(test))
+	}
+}
+
+func (s *suite) Test_Environment_ValidateAndFix_valid_names(c *C) {
+	cases := []string{
+		"ci",
+		"dev",
+		"prod",
+		"a",
+		"a1",
+		"a-1",
+		"a-_2",
+		"a________3",
+	}
+	for _, test := range cases {
+		e := NewEnvironmentState("ci", nil)
+		c.Assert(e.ValidateAndFix(test, nil), IsNil)
+	}
+}
+
+func (s *suite) Test_Project_GetEnvironmentStateOrMakeNew_Env_Name_Field_Is_Set(c *C) {
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
 	env := p.GetEnvironmentStateOrMakeNew("incomplete_env")
 	c.Assert(env.Name, Equals, "incomplete_env")
 }
 
-func (s *suite) Test_LookupDeploymentState(c *C) {
+func (s *suite) Test_Environment_LookupDeploymentState(c *C) {
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
 	env := p.GetEnvironmentStateOrMakeNew("dev")
@@ -39,7 +89,7 @@ func (s *suite) Test_LookupDeploymentState(c *C) {
 	c.Assert(depl.Inputs["list_input"], DeepEquals, []interface{}{"depl_override"})
 }
 
-func (s *suite) Test_LookupDeploymentState_doesnt_exist(c *C) {
+func (s *suite) Test_Environment_LookupDeploymentState_doesnt_exist(c *C) {
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
 	env := p.GetEnvironmentStateOrMakeNew("dev")
@@ -48,7 +98,7 @@ func (s *suite) Test_LookupDeploymentState_doesnt_exist(c *C) {
 	c.Assert(err.Error(), Equals, "Deployment 'doesnt-exist' does not exist")
 }
 
-func (s *suite) Test_GetOrCreateDeploymentState_no_deps(c *C) {
+func (s *suite) Test_Environment_GetOrCreateDeploymentState_no_deps(c *C) {
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
 	env := p.GetEnvironmentStateOrMakeNew("dev")
@@ -58,7 +108,7 @@ func (s *suite) Test_GetOrCreateDeploymentState_no_deps(c *C) {
 	c.Assert(depl.Inputs["list_input"], DeepEquals, []interface{}{"depl_override"})
 }
 
-func (s *suite) Test_GetOrCreateDeploymentState_doesnt_exist_no_deps_returns_new(c *C) {
+func (s *suite) Test_Environment_GetOrCreateDeploymentState_doesnt_exist_no_deps_returns_new(c *C) {
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
 	env := p.GetEnvironmentStateOrMakeNew("dev")
@@ -67,7 +117,7 @@ func (s *suite) Test_GetOrCreateDeploymentState_doesnt_exist_no_deps_returns_new
 	c.Assert(depl.Inputs, HasLen, 0)
 }
 
-func (s *suite) Test_GetProviders(c *C) {
+func (s *suite) Test_Environment_GetProviders(c *C) {
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
 	env := p.GetEnvironmentStateOrMakeNew("dev")
@@ -80,7 +130,7 @@ func (s *suite) Test_GetProviders(c *C) {
 	c.Assert(providers["test-provider"], DeepEquals, []string{"provider"})
 }
 
-func (s *suite) Test_GetProvidersOfType(c *C) {
+func (s *suite) Test_Environment_GetProvidersOfType(c *C) {
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
 	env := p.GetEnvironmentStateOrMakeNew("dev")
@@ -96,7 +146,7 @@ func (s *suite) Test_GetProvidersOfType(c *C) {
 	c.Assert(providers, HasLen, 0)
 }
 
-func (s *suite) Test_ResolveDeploymentPath(c *C) {
+func (s *suite) Test_Environment_ResolveDeploymentPath(c *C) {
 	proj, _ := NewProjectState("project")
 	env := proj.GetEnvironmentStateOrMakeNew("env")
 
@@ -123,7 +173,7 @@ func (s *suite) Test_ResolveDeploymentPath(c *C) {
 	c.Assert(returnedDepl, DeepEquals, deplDep2)
 }
 
-func (s *suite) Test_ResolveDeploymentPath_with_build_stage(c *C) {
+func (s *suite) Test_Environment_ResolveDeploymentPath_with_build_stage(c *C) {
 	proj, _ := NewProjectState("project")
 	env := proj.GetEnvironmentStateOrMakeNew("env")
 
