@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/ankyra/escape-core"
-	"github.com/ankyra/escape-core/validate"
+	"github.com/ankyra/escape-core/state/validate"
 )
 
 type DeploymentState struct {

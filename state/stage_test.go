@@ -17,7 +17,7 @@ limitations under the License.
 package state
 
 import (
-	"github.com/ankyra/escape-core/validate"
+	"github.com/ankyra/escape-core/state/validate"
 	. "gopkg.in/check.v1"
 )
 

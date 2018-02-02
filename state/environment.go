@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ankyra/escape-core/validate"
+	"github.com/ankyra/escape-core/state/validate"
 )
 
 func DeploymentDoesNotExistError(deploymentName string) error {

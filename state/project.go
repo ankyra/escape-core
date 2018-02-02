@@ -22,8 +22,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/ankyra/escape-core/state/validate"
 	"github.com/ankyra/escape-core/util"
-	"github.com/ankyra/escape-core/validate"
 )
 
 type Backend interface {

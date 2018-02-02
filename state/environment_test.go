@@ -18,7 +18,7 @@ package state
 
 import (
 	"github.com/ankyra/escape-core"
-	"github.com/ankyra/escape-core/validate"
+	"github.com/ankyra/escape-core/state/validate"
 	. "gopkg.in/check.v1"
 )
 
@@ -131,7 +131,7 @@ func (s *suite) Test_Environment_GetProviders(c *C) {
 	c.Assert(err, IsNil)
 	metadata := core.NewReleaseMetadata("test", "1")
 	metadata.SetProvides([]string{"test-provider"})
-	depl.CommitVersion("deploy", metadata)
+	depl.CommitVersion(DeployStage, metadata)
 	providers := env.GetProviders()
 	c.Assert(providers, HasLen, 1)
 	c.Assert(providers["test-provider"], DeepEquals, []string{"provider"})
@@ -146,7 +146,7 @@ func (s *suite) Test_Environment_GetProvidersOfType(c *C) {
 	c.Assert(err, IsNil)
 	metadata := core.NewReleaseMetadata("test", "1")
 	metadata.SetProvides([]string{"test-provider"})
-	depl.CommitVersion("deploy", metadata)
+	depl.CommitVersion(DeployStage, metadata)
 	providers := env.GetProvidersOfType("test-provider")
 	c.Assert(providers, HasLen, 1)
 	c.Assert(providers, DeepEquals, []string{"provider"})
@@ -160,28 +160,28 @@ func (s *suite) Test_Environment_ResolveDeploymentPath(c *C) {
 	env, err := proj.GetEnvironmentStateOrMakeNew("env")
 	c.Assert(err, IsNil)
 
-	_, err = env.ResolveDeploymentPath("deploy", "test")
+	_, err = env.ResolveDeploymentPath(DeployStage, "test")
 	c.Assert(err, DeepEquals, DeploymentDoesNotExistError("test"))
-	_, err = env.ResolveDeploymentPath("build", "test")
+	_, err = env.ResolveDeploymentPath(BuildStage, "test")
 	c.Assert(err, DeepEquals, DeploymentDoesNotExistError("test"))
 
 	depl, err := env.GetOrCreateDeploymentState("test")
 	c.Assert(err, IsNil)
-	returnedDepl, err := env.ResolveDeploymentPath("deploy", "test")
+	returnedDepl, err := env.ResolveDeploymentPath(DeployStage, "test")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, depl)
 
-	deplDep, err := depl.GetDeploymentOrMakeNew("deploy", "test-dependency")
+	deplDep, err := depl.GetDeploymentOrMakeNew(DeployStage, "test-dependency")
 	c.Assert(err, IsNil)
-	returnedDepl, err = env.ResolveDeploymentPath("deploy", "test:test-dependency")
+	returnedDepl, err = env.ResolveDeploymentPath(DeployStage, "test:test-dependency")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, deplDep)
-	_, err = env.ResolveDeploymentPath("build", "test:test-dependency")
-	c.Assert(err, DeepEquals, DeploymentPathResolveError("build", "test:test-dependency", "test-dependency"))
+	_, err = env.ResolveDeploymentPath(BuildStage, "test:test-dependency")
+	c.Assert(err, DeepEquals, DeploymentPathResolveError(BuildStage, "test:test-dependency", "test-dependency"))
 
-	deplDep2, err := deplDep.GetDeploymentOrMakeNew("deploy", "test-dependency2")
+	deplDep2, err := deplDep.GetDeploymentOrMakeNew(DeployStage, "test-dependency2")
 	c.Assert(err, IsNil)
-	returnedDepl, err = env.ResolveDeploymentPath("deploy", "test:test-dependency:test-dependency2")
+	returnedDepl, err = env.ResolveDeploymentPath(DeployStage, "test:test-dependency:test-dependency2")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, deplDep2)
 }
@@ -193,15 +193,15 @@ func (s *suite) Test_Environment_ResolveDeploymentPath_with_build_stage(c *C) {
 
 	depl, err := env.GetOrCreateDeploymentState("test")
 	c.Assert(err, IsNil)
-	returnedDepl, err := env.ResolveDeploymentPath("build", "test")
+	returnedDepl, err := env.ResolveDeploymentPath(BuildStage, "test")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, depl)
 
-	deplDep, err := depl.GetDeploymentOrMakeNew("build", "test-dependency")
+	deplDep, err := depl.GetDeploymentOrMakeNew(BuildStage, "test-dependency")
 	c.Assert(err, IsNil)
-	returnedDepl, err = env.ResolveDeploymentPath("build", "test:test-dependency")
+	returnedDepl, err = env.ResolveDeploymentPath(BuildStage, "test:test-dependency")
 	c.Assert(err, IsNil)
 	c.Assert(returnedDepl, DeepEquals, deplDep)
-	_, err = env.ResolveDeploymentPath("deploy", "test:test-dependency")
-	c.Assert(err, DeepEquals, DeploymentPathResolveError("deploy", "test:test-dependency", "test-dependency"))
+	_, err = env.ResolveDeploymentPath(DeployStage, "test:test-dependency")
+	c.Assert(err, DeepEquals, DeploymentPathResolveError(DeployStage, "test:test-dependency", "test-dependency"))
 }
