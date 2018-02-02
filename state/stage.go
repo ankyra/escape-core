@@ -16,15 +16,12 @@ limitations under the License.
 
 package state
 
-import "fmt"
+import (
+	"github.com/ankyra/escape-core/validate"
+)
 
 const BuildStage = "build"
 const DeployStage = "deploy"
-
-func InvalidStageNameError(name string) error {
-	return fmt.Errorf("Invalid stage name '%s'. Expecting '%s or '%s'.",
-		name, BuildStage, DeployStage)
-}
 
 type StageState struct {
 	UserInputs  map[string]interface{}      `json:"inputs,omitempty"`
@@ -51,8 +48,8 @@ func newStage() *StageState {
 }
 
 func (st *StageState) validateAndFix(name string, envState *EnvironmentState, deplState *DeploymentState) error {
-	if name != BuildStage && name != DeployStage {
-		return InvalidStageNameError(name)
+	if !validate.IsValidStageName(name) {
+		return validate.InvalidStageNameError(name)
 	}
 	st.Name = name
 	if st.UserInputs == nil {

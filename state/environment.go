@@ -18,14 +18,10 @@ package state
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
-)
 
-func InvalidEnvironmentNameError(name string) error {
-	return fmt.Errorf("Sorry, the environment name '%s' is not allowed. Expected name matching /%s/",
-		name, environmentNameRegexFmt)
-}
+	"github.com/ankyra/escape-core/validate"
+)
 
 func DeploymentDoesNotExistError(deploymentName string) error {
 	return fmt.Errorf("Deployment '%s' does not exist", deploymentName)
@@ -42,17 +38,15 @@ type EnvironmentState struct {
 	Project     *ProjectState               `json:"-"`
 }
 
-func NewEnvironmentState(envName string, project *ProjectState) *EnvironmentState {
-	return &EnvironmentState{
+func NewEnvironmentState(envName string, project *ProjectState) (*EnvironmentState, error) {
+	e := &EnvironmentState{
 		Name:        envName,
 		Inputs:      map[string]interface{}{},
 		Deployments: map[string]*DeploymentState{},
 		Project:     project,
 	}
+	return e, e.ValidateAndFix(envName, project)
 }
-
-var environmentNameRegexFmt = "^[a-z]+[a-z0-9-_]*$"
-var environmentNameRegex = regexp.MustCompile(environmentNameRegexFmt)
 
 func (e *EnvironmentState) GetDeployments() []*DeploymentState {
 	result := []*DeploymentState{}
@@ -71,8 +65,8 @@ func (e *EnvironmentState) Save(d *DeploymentState) error {
 }
 
 func (e *EnvironmentState) ValidateAndFix(name string, project *ProjectState) error {
-	if !environmentNameRegex.MatchString(name) {
-		return InvalidEnvironmentNameError(name)
+	if !validate.IsValidEnvironmentName(name) {
+		return validate.InvalidEnvironmentNameError(name)
 	}
 	e.Name = name
 	e.Project = project
@@ -114,7 +108,7 @@ func (e *EnvironmentState) ResolveDeploymentPath(stage, deploymentPath string) (
 			return nil, DeploymentPathResolveError(stage, deploymentPath, p)
 		}
 		val = newVal
-		stage = "deploy"
+		stage = DeployStage
 	}
 	return val, nil
 }

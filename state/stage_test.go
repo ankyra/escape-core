@@ -17,6 +17,7 @@ limitations under the License.
 package state
 
 import (
+	"github.com/ankyra/escape-core/validate"
 	. "gopkg.in/check.v1"
 )
 
@@ -41,7 +42,7 @@ func (s *suite) Test_Stage_validateAndFix_errors_on_invalid_name(c *C) {
 	}
 	for _, test := range cases {
 		st := newStage()
-		c.Assert(st.validateAndFix(test, nil, nil), DeepEquals, InvalidStageNameError(test))
+		c.Assert(st.validateAndFix(test, nil, nil), DeepEquals, validate.InvalidStageNameError(test))
 	}
 }
 

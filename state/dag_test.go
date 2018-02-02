@@ -22,7 +22,8 @@ import (
 
 func (s *suite) Test_GetDeploymentStateDAG_empty_env(c *C) {
 	prj, _ := NewProjectState("my-project")
-	env := prj.GetEnvironmentStateOrMakeNew("my-env")
+	env, err := prj.GetEnvironmentStateOrMakeNew("my-env")
+	c.Assert(err, IsNil)
 	dag, err := env.GetDeploymentStateDAG("build")
 	c.Assert(err, IsNil)
 	c.Assert(dag, HasLen, 0)
@@ -31,7 +32,8 @@ func (s *suite) Test_GetDeploymentStateDAG_empty_env(c *C) {
 func (s *suite) Test_GetDeploymentStateDAG_one_deployment(c *C) {
 	stage := "deploy"
 	prj, _ := NewProjectState("my-project")
-	env := prj.GetEnvironmentStateOrMakeNew("my-env")
+	env, err := prj.GetEnvironmentStateOrMakeNew("my-env")
+	c.Assert(err, IsNil)
 	depl1 := env.GetOrCreateDeploymentState("depl1")
 	depl1.GetStageOrCreateNew(stage)
 	dag, err := env.GetDeploymentStateDAG(stage)
@@ -44,7 +46,8 @@ func (s *suite) Test_GetDeploymentStateDAG_one_deployment(c *C) {
 func (s *suite) Test_GetDeploymentStateDAG_two_deployments_one_provider(c *C) {
 	stage := "deploy"
 	prj, _ := NewProjectState("my-project")
-	env := prj.GetEnvironmentStateOrMakeNew("my-env")
+	env, err := prj.GetEnvironmentStateOrMakeNew("my-env")
+	c.Assert(err, IsNil)
 	depl1 := env.GetOrCreateDeploymentState("depl1")
 	depl2 := env.GetOrCreateDeploymentState("depl2")
 	st := depl1.GetStageOrCreateNew(stage)
@@ -77,7 +80,8 @@ func (s *suite) Test_GetDeploymentStateDAG(c *C) {
 
 	stage := "deploy"
 	prj, _ := NewProjectState("my-project")
-	env := prj.GetEnvironmentStateOrMakeNew("my-env")
+	env, err := prj.GetEnvironmentStateOrMakeNew("my-env")
+	c.Assert(err, IsNil)
 	deplA := env.GetOrCreateDeploymentState("deplA")
 	deplB := env.GetOrCreateDeploymentState("deplB")
 	deplC := env.GetOrCreateDeploymentState("deplC")

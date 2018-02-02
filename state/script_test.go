@@ -33,7 +33,8 @@ func (s *scriptSuite) SetUpTest(c *C) {
 	var err error
 	prj, err := NewProjectStateFromFile("prj", "testdata/project_script.json", nil)
 	c.Assert(err, IsNil)
-	env := prj.GetEnvironmentStateOrMakeNew("dev")
+	env, err := prj.GetEnvironmentStateOrMakeNew("dev")
+	c.Assert(err, IsNil)
 	depl = env.GetOrCreateDeploymentState("archive-release")
 	fullDepl = env.GetOrCreateDeploymentState("archive-full")
 	dep := env.GetOrCreateDeploymentState("archive-release-with-deps")

@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/ankyra/escape-core"
+	"github.com/ankyra/escape-core/validate"
 	. "gopkg.in/check.v1"
 )
 
@@ -34,7 +35,8 @@ func (s *suite) SetUpTest(c *C) {
 	var err error
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
-	env := p.GetEnvironmentStateOrMakeNew("dev")
+	env, err := p.GetEnvironmentStateOrMakeNew("dev")
+	c.Assert(err, IsNil)
 
 	depl = env.GetOrCreateDeploymentState("archive-release")
 	fullDepl = env.GetOrCreateDeploymentState("archive-full")
@@ -78,7 +80,7 @@ func (s *suite) Test_Deployment_validateAndFix_fails_on_invalid_name(c *C) {
 	}
 	for _, test := range cases {
 		d := NewDeploymentState(nil, "name", "project/application")
-		c.Assert(d.validateAndFix(test, nil), DeepEquals, InvalidDeploymentNameError(test))
+		c.Assert(d.validateAndFix(test, nil), DeepEquals, validate.InvalidDeploymentNameError(test))
 	}
 }
 
@@ -93,6 +95,7 @@ func (s *suite) Test_Deployment_validateAndFix_valid_names(c *C) {
 	for _, test := range cases {
 		d := NewDeploymentState(nil, "name", "project/application")
 		c.Assert(d.validateAndFix(test, nil), IsNil)
+		c.Assert(d.Name, Equals, test)
 	}
 }
 
@@ -191,7 +194,8 @@ func (s *suite) Test_GetProviders_includes_parent_providers(c *C) {
 func (s *suite) Test_GetProviders_includes_parent_build_providers_for_dep(c *C) {
 	p, err := NewProjectStateFromFile("prj", "testdata/project.json", nil)
 	c.Assert(err, IsNil)
-	env := p.GetEnvironmentStateOrMakeNew("dev")
+	env, err := p.GetEnvironmentStateOrMakeNew("dev")
+	c.Assert(err, IsNil)
 	dep := env.GetOrCreateDeploymentState("archive-release-with-deps")
 	deplWithDeps = dep.GetDeploymentOrMakeNew("build", "archive-release")
 	providers := deplWithDeps.GetProviders("deploy")
