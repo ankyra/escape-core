@@ -16,6 +16,16 @@ limitations under the License.
 
 package state
 
+import "fmt"
+
+const BuildStage = "build"
+const DeployStage = "deploy"
+
+func InvalidStageNameError(name string) error {
+	return fmt.Errorf("Invalid stage name '%s'. Expecting '%s or '%s'.",
+		name, BuildStage, DeployStage)
+}
+
 type StageState struct {
 	UserInputs  map[string]interface{}      `json:"inputs,omitempty"`
 	Inputs      map[string]interface{}      `json:"calculated_inputs,omitempty"`
@@ -41,6 +51,9 @@ func newStage() *StageState {
 }
 
 func (st *StageState) validateAndFix(name string, envState *EnvironmentState, deplState *DeploymentState) error {
+	if name != BuildStage && name != DeployStage {
+		return InvalidStageNameError(name)
+	}
 	st.Name = name
 	if st.UserInputs == nil {
 		st.UserInputs = map[string]interface{}{}
