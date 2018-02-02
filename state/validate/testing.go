@@ -40,6 +40,8 @@ var ValidStateProjectNames = []string{
 	"t_____",
 	"t------",
 	"TEST",
+	"1test",
+	"1000",
 }
 
 var InvalidEnvironmentNames = []string{
@@ -50,6 +52,10 @@ var InvalidEnvironmentNames = []string{
 	":",
 	"A",
 	"B",
+	"1prod",
+	"-prod",
+	"_prod",
+	"PROD",
 }
 var ValidEnvironmentNames = []string{
 	"ci",
@@ -70,6 +76,9 @@ var InvalidDeploymentNames = []string{
 	"$",
 	"^",
 	"-",
+	"1test",
+	"-test",
+	"/test",
 }
 
 var ValidDeploymentNames = []string{

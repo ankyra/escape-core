@@ -41,7 +41,7 @@ func InvalidStageNameError(name string) error {
 		name)
 }
 
-var projectNameRegexFmt = "^[a-zA-Z]+[a-zA-Z0-9-_]+$"
+var projectNameRegexFmt = "^[a-zA-Z0-9]+[a-zA-Z0-9-_]+$"
 var projectNameRegex = regexp.MustCompile(projectNameRegexFmt)
 
 var environmentNameRegexFmt = "^[a-z]+[a-z0-9-_]*$"
