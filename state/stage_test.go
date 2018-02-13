@@ -32,17 +32,17 @@ func (s *suite) Test_newStage(c *C) {
 }
 
 func (s *suite) Test_Stage_validateAndFix_errors_on_invalid_name(c *C) {
-	cases := []string{
-		"",
-		"aweoijaweioj",
-		"  build",
-		"  deploy  ",
-		"deploy ",
-		".",
-	}
-	for _, test := range cases {
+	for _, test := range validate.InvalidStageNames {
 		st := newStage()
 		c.Assert(st.validateAndFix(test, nil, nil), DeepEquals, validate.InvalidStageNameError(test))
+	}
+}
+
+func (s *suite) Test_ValidateNames_fails_on_invalid_name(c *C) {
+	for _, name := range validate.InvalidStageNames {
+		st := newStage()
+		st.Name = name
+		c.Assert(st.ValidateNames(), DeepEquals, validate.InvalidStageNameError(name))
 	}
 }
 

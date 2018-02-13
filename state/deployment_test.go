@@ -68,6 +68,25 @@ func (s *suite) Test_Deployment_NewDeploymentState(c *C) {
 	c.Assert(d.environment, IsNil)
 }
 
+func (s *suite) Test_Deployment_ValidateNames_fails_if_invalid_name(c *C) {
+	d, err := NewDeploymentState(nil, "name", "project/application")
+	c.Assert(err, IsNil)
+	for _, name := range validate.InvalidDeploymentNames {
+		d.Name = name
+		c.Assert(d.ValidateNames(), DeepEquals, validate.InvalidDeploymentNameError(name))
+	}
+}
+
+func (s *suite) Test_Deployment_ValidateNames_fails_if_invalid_sub_deployment_name(c *C) {
+	for _, name := range validate.InvalidDeploymentNames {
+		d, _ := NewDeploymentState(nil, "name", "project/application")
+		st := d.GetStageOrCreateNew("deploy")
+		brokenDepl, _ := NewDeploymentState(nil, name, "project/application")
+		st.Deployments[name] = brokenDepl
+		c.Assert(d.ValidateNames(), DeepEquals, validate.InvalidDeploymentNameError(name))
+	}
+}
+
 func (s *suite) Test_Deployment_validateAndFix_fixes_nils(c *C) {
 	d, err := NewDeploymentState(nil, "name", "project/application")
 	c.Assert(err, IsNil)

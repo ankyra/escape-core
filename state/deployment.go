@@ -274,6 +274,18 @@ func (d *DeploymentState) getDependencyStages(startStage string) []*StageState {
 	return stages
 }
 
+func (d *DeploymentState) ValidateNames() error {
+	if !validate.IsValidDeploymentName(d.Name) {
+		return validate.InvalidDeploymentNameError(d.Name)
+	}
+	for _, st := range d.Stages {
+		if err := st.ValidateNames(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (d *DeploymentState) validateAndFix(name string, env *EnvironmentState) error {
 	if !validate.IsValidDeploymentName(name) {
 		return validate.InvalidDeploymentNameError(name)
