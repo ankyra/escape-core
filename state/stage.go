@@ -47,6 +47,14 @@ func newStage() *StageState {
 	}
 }
 
+func (st *StageState) Summarize() *StageState {
+	result := newStage()
+	result.Name = st.Name
+	result.Status = st.Status
+	result.Version = st.Version
+	return result
+}
+
 func (st *StageState) ValidateNames() error {
 	if !validate.IsValidStageName(st.Name) {
 		return validate.InvalidStageNameError(st.Name)

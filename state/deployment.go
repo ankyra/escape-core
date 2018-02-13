@@ -50,6 +50,14 @@ func (d *DeploymentState) GetName() string {
 	return d.Name
 }
 
+func (d *DeploymentState) Summarize() *DeploymentState {
+	result, _ := NewDeploymentState(d.environment, d.Name, d.Release)
+	for name, stage := range d.Stages {
+		result.Stages[name] = stage.Summarize()
+	}
+	return result
+}
+
 func (d *DeploymentState) GetRootDeploymentName() string {
 	prev := d
 	p := prev

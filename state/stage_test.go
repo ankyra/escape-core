@@ -89,3 +89,26 @@ func (s *suite) Test_Stage_SetOutputs_inits_new_map_if_set_to_nil(c *C) {
 	st.SetOutputs(nil)
 	c.Assert(st.Outputs, Not(IsNil))
 }
+
+func (s *suite) Test_Stage_Summarize(c *C) {
+	st := newStage()
+	st.Name = "test"
+	st.UserInputs = map[string]interface{}{
+		"yo": "wad",
+	}
+	st.Inputs = map[string]interface{}{
+		"yo": "wad",
+	}
+	st.Outputs = map[string]interface{}{
+		"yo": "wad",
+	}
+	sum := st.Summarize()
+	c.Assert(sum.Name, Equals, st.Name)
+	c.Assert(sum.Status, DeepEquals, st.Status)
+	c.Assert(sum.Version, Equals, st.Version)
+	c.Assert(sum.UserInputs, HasLen, 0)
+	c.Assert(sum.Inputs, HasLen, 0)
+	c.Assert(sum.Outputs, HasLen, 0)
+	c.Assert(sum.Provides, HasLen, 0)
+	c.Assert(sum.Providers, HasLen, 0)
+}
