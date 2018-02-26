@@ -62,12 +62,12 @@ Providers and consumers provide a loose coupling, but sometimes we know exactly
 what provider implementation we want to use. In this case we can create a wrapper
 release that uses one dependency as the provider for the next:
 
-```
+```yaml
 depends:
 - release_id: my-project/postgres-provider-latest as postgres
 - release_id: my-project/my-application-latest
   consumes:
-	    postgres: $postgres.deployment
+	  postgres: $postgres.deployment
 ```
 
 To read more about wrapper releases see the [blog post](https://www.ankyra.io/blog/combining-packages-into-platforms/).
