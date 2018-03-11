@@ -1,16 +1,16 @@
 name: escape-core
-version: 0.11.@
+version: 0.12.@
 
 description: >
     Core library containing datastructures for working with Release Metadata,
     State and the Escape Scripting Language.
 
-    Please see https://escape.ankyra.io for the full documentation.
+    Please see https://escape.ankyra.io/docs/ for the full documentation.
 
 logo: logo.png
 
 metadata:
-  release_metadata_api_version: 11
+  release_metadata_api_version: 12
 
 extends:
 - extension-golang-binary-latest
