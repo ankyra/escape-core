@@ -18,6 +18,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ExecStage struct {
@@ -32,23 +33,63 @@ type ExecStage struct {
 	// specify both the "cmd" and "inline" fields.
 	Inline string `json:"inline"`
 
-	// Relative path to a script. Deprecated field. Will be used to populate
-	// "cmd" and "args" fields to execute this script in `bash`. If the "cmd"
-	// field is already populated then this field will be ignored entirely.
-	Script string `json:"script"`
+	// Relative path to a script. If the "cmd" field is already populated
+	// then this field will be ignored entirely.
+	RelativeScript string `json:"script"`
+}
+
+func NewExecStageFromString(str string) *ExecStage {
+	return &ExecStage{
+		Cmd:  "bash",
+		Args: []string{"-c", str},
+	}
+
+}
+
+func NewExecStageForRelativeScript(script string) *ExecStage {
+	return &ExecStage{
+		RelativeScript: script,
+	}
+}
+
+func (e *ExecStage) IsEmpty() bool {
+	return e.Cmd == "" && e.RelativeScript == "" && e.Inline == ""
+}
+
+func (e *ExecStage) GetAsCommand() []string {
+	if e.Cmd != "" {
+		result := []string{e.Cmd}
+		return append(result, e.Args...)
+	} else if e.RelativeScript != "" {
+		script := "./" + e.RelativeScript + " .escape/outputs.json"
+		return []string{"bash", "-c", script}
+	} else if e.Inline != "" {
+		panic("not yet supported")
+	}
+	return []string{}
 }
 
 func (e *ExecStage) ValidateAndFix() error {
-	if e.Cmd == "" && e.Script != "" {
-		e.Cmd = "bash"
-		e.Args = []string{"-c", "./" + e.Script + " .escape/outputs.json"}
-		e.Script = ""
+	fieldsSet := 0
+	if e.Cmd != "" {
+		fieldsSet += 1
 	}
-	if e.Cmd != "" && e.Inline != "" {
-		return fmt.Errorf("Both the cmd and inline field are given.")
+	if e.Inline != "" {
+		fieldsSet += 1
 	}
-	if e.Cmd == "" && e.Inline == "" {
-		return fmt.Errorf("Missing script, cmd or inline field.")
+	if e.RelativeScript != "" {
+		fieldsSet += 1
+	}
+	if fieldsSet > 1 {
+		return fmt.Errorf("More than one field is set. Please specify only one of script, cmd or inline.")
 	}
 	return nil
+}
+
+func (e *ExecStage) String() string {
+	if e.Cmd != "" {
+		return fmt.Sprintf("%s %s", e.Cmd, strings.Join(e.Args, " "))
+	} else {
+		return e.Inline
+	}
 }

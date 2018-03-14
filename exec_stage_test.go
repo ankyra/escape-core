@@ -26,18 +26,16 @@ var _ = Suite(&execSuite{})
 
 func (s *execSuite) Test_ExecStage_ValidateAndFix_parses_deprecated_Script(c *C) {
 	cases := [][]interface{}{
-		[]interface{}{"myscript.sh", "bash", []string{"-c", "./myscript.sh .escape/outputs.json"}},
-		[]interface{}{"myscript.sh test", "bash", []string{"-c", "./myscript.sh test .escape/outputs.json"}},
-		[]interface{}{"deps/_/escape/escape", "bash", []string{"-c", "./deps/_/escape/escape .escape/outputs.json"}},
+		[]interface{}{"myscript.sh", []string{"bash", "-c", "./myscript.sh .escape/outputs.json"}},
+		[]interface{}{"myscript.sh test", []string{"bash", "-c", "./myscript.sh test .escape/outputs.json"}},
+		[]interface{}{"deps/_/escape/escape", []string{"bash", "-c", "./deps/_/escape/escape .escape/outputs.json"}},
 	}
 	for _, test := range cases {
 		unit := ExecStage{
-			Script: test[0].(string),
+			RelativeScript: test[0].(string),
 		}
 		c.Assert(unit.ValidateAndFix(), IsNil)
-		c.Assert(unit.Script, Equals, "")
-		c.Assert(unit.Cmd, Equals, test[1].(string))
-		c.Assert(unit.Args, DeepEquals, test[2])
+		c.Assert(unit.GetAsCommand(), DeepEquals, test[1])
 	}
 }
 
@@ -46,10 +44,5 @@ func (s *execSuite) Test_ExecStage_ValidateAndFix_errors_when_both_cmd_and_inlin
 		Inline: "test",
 		Cmd:    "test",
 	}
-	c.Assert(unit.ValidateAndFix(), Not(IsNil))
-}
-
-func (s *execSuite) Test_ExecStage_ValidateAndFix_errors_when_both_cmd_and_inline_are_missing(c *C) {
-	unit := ExecStage{}
 	c.Assert(unit.ValidateAndFix(), Not(IsNil))
 }

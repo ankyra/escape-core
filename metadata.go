@@ -237,16 +237,12 @@ func (m *ReleaseMetadata) GetStage(stage string) *ExecStage {
 	return result
 }
 
-func (m *ReleaseMetadata) SetStage(stage, script string) {
-	if script == "" {
-		return
-	}
-	st := m.GetStage(stage)
-	st.Script = script
+func (m *ReleaseMetadata) SetExecStage(stage string, exec *ExecStage) {
+	m.Stages[stage] = exec
 }
 
-func (m *ReleaseMetadata) GetScript(stage string) string {
-	return m.GetStage(stage).Script
+func (m *ReleaseMetadata) GetExecStage(stage string) *ExecStage {
+	return m.Stages[stage]
 }
 
 func (m *ReleaseMetadata) AddInputVariable(input *variables.Variable) {
