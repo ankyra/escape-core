@@ -25,17 +25,17 @@ type ExecStage struct {
 
 	// The command to run. Its arguments, if any, should be defined using the
 	// "args" field.
-	Cmd string `json:"cmd"`
+	Cmd string `json:"cmd,omitempty"`
 	// Arguments to the command.
-	Args []string `json:"args"`
+	Args []string `json:"args,omitempty"`
 
 	// An inline script, which will be executed using bash. It's an error to
 	// specify both the "cmd" and "inline" fields.
-	Inline string `json:"inline"`
+	Inline string `json:"inline,omitempty"`
 
 	// Relative path to a script. If the "cmd" field is already populated
 	// then this field will be ignored entirely.
-	RelativeScript string `json:"script"`
+	RelativeScript string `json:"script,omitempty"`
 }
 
 func NewExecStageFromString(str string) *ExecStage {
@@ -89,6 +89,8 @@ func (e *ExecStage) ValidateAndFix() error {
 func (e *ExecStage) String() string {
 	if e.Cmd != "" {
 		return fmt.Sprintf("%s %s", e.Cmd, strings.Join(e.Args, " "))
+	} else if e.RelativeScript != "" {
+		return e.RelativeScript
 	} else {
 		return e.Inline
 	}
