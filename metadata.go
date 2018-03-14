@@ -32,10 +32,6 @@ import (
 	"github.com/ankyra/escape-core/variables"
 )
 
-type ExecStage struct {
-	Script string `json:"script"`
-}
-
 type ProviderConfig struct {
 	Name string `json:"name"`
 }
@@ -179,6 +175,11 @@ func validate(m *ReleaseMetadata) error {
 	for _, d := range m.Downloads {
 		if err := d.ValidateAndFix(); err != nil {
 			return err
+		}
+	}
+	for field, s := range m.Stages {
+		if err := s.ValidateAndFix(); err != nil {
+			return fmt.Errorf("Found a problem in the '%s' field: %s", field, err.Error())
 		}
 	}
 	return nil

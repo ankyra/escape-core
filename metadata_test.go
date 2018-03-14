@@ -214,7 +214,12 @@ func (s *metadataSuite) Test_FromJson(c *C) {
         "variable_context": {
             "base": "test-depends-v1",
             "test-depends": "test-depends-v1"
-        }
+        },
+		"stages": {
+			"deploy": {
+				"script": "deploy.sh"
+			}
+		}
     }`
 	m, err := NewReleaseMetadataFromJsonString(json)
 	c.Assert(err, IsNil)
@@ -228,6 +233,9 @@ func (s *metadataSuite) Test_FromJson(c *C) {
 	c.Assert(m.GetConsumes("deploy")[1], Equals, "provider2")
 	c.Assert(m.GetConsumes("build"), HasLen, 1)
 	c.Assert(m.GetConsumes("build")[0], Equals, "provider1")
+	c.Assert(m.Stages["deploy"].Cmd, Equals, "bash")
+	c.Assert(m.Stages["deploy"].Args, DeepEquals, []string{"-c", "./deploy.sh"})
+	c.Assert(m.Stages["deploy"].Script, Equals, "")
 }
 
 func (s *metadataSuite) Test_AddInputVariable(c *C) {
