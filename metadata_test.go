@@ -234,7 +234,7 @@ func (s *metadataSuite) Test_FromJson(c *C) {
 	c.Assert(m.GetConsumes("build"), HasLen, 1)
 	c.Assert(m.GetConsumes("build")[0], Equals, "provider1")
 	c.Assert(m.Stages["deploy"].Cmd, Equals, "bash")
-	c.Assert(m.Stages["deploy"].Args, DeepEquals, []string{"-c", "./deploy.sh"})
+	c.Assert(m.Stages["deploy"].Args, DeepEquals, []string{"-c", "./deploy.sh .escape/outputs.json"})
 	c.Assert(m.Stages["deploy"].Script, Equals, "")
 }
 

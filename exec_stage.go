@@ -41,7 +41,7 @@ type ExecStage struct {
 func (e *ExecStage) ValidateAndFix() error {
 	if e.Cmd == "" && e.Script != "" {
 		e.Cmd = "bash"
-		e.Args = []string{"-c", "./" + e.Script}
+		e.Args = []string{"-c", "./" + e.Script + " .escape/outputs.json"}
 		e.Script = ""
 	}
 	if e.Cmd != "" && e.Inline != "" {
