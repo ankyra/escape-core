@@ -161,7 +161,8 @@ func (e *ExecStage) String() string {
 	} else if e.RelativeScript != "" {
 		return e.RelativeScript
 	} else {
-		return e.Inline
+		firstLine := strings.Split(e.Inline, "\n")[0]
+		return fmt.Sprintf("<inline script starting with '%s'>", firstLine)
 	}
 }
 

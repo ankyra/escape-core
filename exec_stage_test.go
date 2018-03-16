@@ -104,3 +104,22 @@ func (s *execSuite) Test_ExecStage_Eval_all_fields(c *C) {
 	c.Assert(newUnit.Inline, Equals, "testing")
 	c.Assert(newUnit.Args, DeepEquals, []string{"testing", "123", "testing"})
 }
+
+func (s *execSuite) Test_ExecStage_String(c *C) {
+	unit := &ExecStage{RelativeScript: "script.sh"}
+	c.Assert(unit.String(), Equals, "script.sh")
+	unit = &ExecStage{Cmd: "script.sh"}
+	c.Assert(unit.String(), Equals, "script.sh ")
+	unit = &ExecStage{Cmd: "script.sh", Args: []string{}}
+	c.Assert(unit.String(), Equals, "script.sh ")
+	unit = &ExecStage{Cmd: "script.sh", Args: []string{"test"}}
+	c.Assert(unit.String(), Equals, "script.sh test")
+	unit = &ExecStage{Cmd: "script.sh", Args: []string{"test", "test2"}}
+	c.Assert(unit.String(), Equals, "script.sh test test2")
+	unit = &ExecStage{}
+	c.Assert(unit.String(), Equals, "<inline script starting with ''>")
+	unit = &ExecStage{Inline: "script.sh"}
+	c.Assert(unit.String(), Equals, "<inline script starting with 'script.sh'>")
+	unit = &ExecStage{Inline: "script.sh\nscriptasdasdasdasd"}
+	c.Assert(unit.String(), Equals, "<inline script starting with 'script.sh'>")
+}
