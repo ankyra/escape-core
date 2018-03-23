@@ -28,7 +28,7 @@ import (
 
 type Backend interface {
 	Save(d *DeploymentState) error
-	DeleteDeployment(environmentName, deploymentName string) error
+	DeleteDeployment(project, environmentName, deploymentName string) error
 }
 
 type ProjectState struct {
@@ -98,7 +98,7 @@ func (p *ProjectState) CommitDeleteDeployment(env, depl string) error {
 	if p.Backend == nil {
 		return fmt.Errorf("Couldn't save deployment state: missing state Backend for ProjectState. This is a bug in Escape.")
 	}
-	return p.Backend.DeleteDeployment(env, depl)
+	return p.Backend.DeleteDeployment(p.Name, env, depl)
 }
 
 func (p *ProjectState) ValidateAndFix() error {
