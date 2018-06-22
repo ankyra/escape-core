@@ -31,6 +31,11 @@ func InvalidDeploymentNameError(name string) error {
 		name, deploymentNameRegexFmt)
 }
 
+func InvalidDeploymentJobNameError(name string) error {
+	return fmt.Errorf("The deployment job name '%s' is not allowed. Expected a string matching /%s/",
+		name, deploymentJobNameRegexFmt)
+}
+
 func InvalidEnvironmentNameError(name string) error {
 	return fmt.Errorf("The environment name '%s' is not allowed. Expected a string matching /%s/",
 		name, environmentNameRegexFmt)
@@ -50,12 +55,19 @@ var environmentNameRegex = regexp.MustCompile(environmentNameRegexFmt)
 var deploymentNameRegexFmt = "^[a-zA-Z_]+[a-zA-Z0-9-_/]*$"
 var deploymentNameRegex = regexp.MustCompile(deploymentNameRegexFmt)
 
+var deploymentJobNameRegexFmt = "^[a-z]+[a-z0-9-_]*$"
+var deploymentJobNameRegex = regexp.MustCompile(deploymentJobNameRegexFmt)
+
 func IsValidProjectName(name string) bool {
 	return projectNameRegex.MatchString(name)
 }
 
 func IsValidDeploymentName(name string) bool {
 	return deploymentNameRegex.MatchString(name)
+}
+
+func isValidDeploymentJobName(name string) bool {
+	return deploymentJobNameRegex.MatchString(name)
 }
 
 func IsValidEnvironmentName(name string) bool {
