@@ -8,6 +8,7 @@ and the Escape Scripting Language. This library is used by:
 * [Escape client](https://github.com/ankyra/escape)
 * [Escape Inventory](https://github.com/ankyra/escape-inventory)
 
+
 ## Documentation
 
 Godoc API documentation can be found [here](http://godoc.org/github.com/ankyra/escape-core).
