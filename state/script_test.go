@@ -192,13 +192,15 @@ func (s *scriptSuite) Test_ToScriptEnvironment_adds_consumers_for_dependency(c *
 	c.Assert(err, IsNil)
 	environment, err := NewEnvironmentState("dev", proj)
 	c.Assert(err, IsNil)
-	parent, err := environment.GetOrCreateDeploymentState("parent")
+	superParent, err := environment.GetOrCreateDeploymentState("super")
 	c.Assert(err, IsNil)
-	_, err = parent.GetDeploymentOrMakeNew(BuildStage, "dep-provider")
+	parent, err := superParent.GetDeploymentOrMakeNew(BuildStage, "parent")
 	c.Assert(err, IsNil)
-	depConsumer, err := parent.GetDeploymentOrMakeNew(BuildStage, "dep-consumer")
+	_, err = parent.GetDeploymentOrMakeNew(DeployStage, "dep-provider")
 	c.Assert(err, IsNil)
-	depConsumer.SetProvider(DeployStage, "test", "parent:dep-provider")
+	depConsumer, err := parent.GetDeploymentOrMakeNew(DeployStage, "dep-consumer")
+	c.Assert(err, IsNil)
+	depConsumer.SetProvider(DeployStage, "test", "super:parent:dep-provider")
 
 	metadata := core.NewReleaseMetadata("test", "1.0")
 	metadata.SetConsumes([]string{"test"})
@@ -212,8 +214,8 @@ func (s *scriptSuite) Test_ToScriptEnvironment_adds_consumers_for_dependency(c *
 		"outputs":  []string{},
 		"metadata": []string{},
 	}
-	test_helper_check_script_environment(c, dict["this"], dicts, "parent:dep-consumer")
-	test_helper_check_script_environment(c, dict["test"], dicts, "parent:dep-provider")
+	test_helper_check_script_environment(c, dict["this"], dicts, "super:parent:dep-consumer")
+	test_helper_check_script_environment(c, dict["test"], dicts, "super:parent:dep-provider")
 }
 
 func (s *scriptSuite) Test_ToScriptEnvironment_adds_renamed_consumers(c *C) {

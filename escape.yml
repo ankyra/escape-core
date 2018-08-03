@@ -1,5 +1,5 @@
 name: escape-core
-version: 0.13.@
+version: 0.14.@
 
 description: >
     Core library containing datastructures for working with Release Metadata,
@@ -10,7 +10,7 @@ description: >
 logo: logo.png
 
 metadata:
-  release_metadata_api_version: 13
+  release_metadata_api_version: 14
 
 extends:
 - extension-golang-binary-latest
