@@ -224,7 +224,7 @@ func (d *DeploymentState) ConfigureProviders(metadata *core.ReleaseMetadata, sta
 			d.SetProvider(stage, variable, provider)
 			continue
 		}
-		_, configured := configuredProviders[variable]
+		provider, configured := configuredProviders[variable]
 		if configured {
 			d.SetProvider(stage, variable, provider)
 			continue
