@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ankyra/escape-core/util"
 )
 
 type StdlibFunc struct {
@@ -48,6 +50,9 @@ var Stdlib = []StdlibFunc{
 	StdlibFunc{"upper", ShouldLift(strings.ToUpper), "Returns a copy of the string v with all Unicode characters mapped to their upper case", "strings", "v :: string"},
 	StdlibFunc{"title", ShouldLift(strings.ToTitle), "Returns a copy of the string v with all Unicode characters mapped to their title case", "strings", "v :: string"},
 	StdlibFunc{"split", ShouldLift(strings.Split), "Split slices s into all substrings separated by sep and returns a slice of the substrings between those separators. If sep is empty, Split splits after each UTF-8 sequence.", "strings", "sep :: string"},
+	StdlibFunc{"path_exists", ShouldLift(util.PathExists), "Returns true if the path exists, false if not", "strings", ""},
+	StdlibFunc{"file_exists", ShouldLift(util.FileExists), "Returns true if the path exists and if it's not a directory, false otherwise", "strings", ""},
+	StdlibFunc{"dir_exists", ShouldLift(util.IsDir), "Returns true if the path exists and if it is a directory, false otherwise", "strings", ""},
 	StdlibFunc{"join", ShouldLift(strings.Join), "Join concatenates the elements of a to create a single string. The separator string sep is placed between elements in the resulting string. ", "lists", "sep :: string"},
 	StdlibFunc{"replace", ShouldLift(strings.Replace), "Replace returns a copy of the string s with the first n non-overlapping instances of old replaced by new. If old is empty, it matches at the beginning of the string and after each UTF-8 sequence, yielding up to k+1 replacements for a k-rune string. If n < 0, there is no limit on the number of replacements.", "strings", "old :: string, new :: string, n :: integer"},
 	StdlibFunc{"base64_encode", ShouldLift(base64.StdEncoding.EncodeToString), "Encode string to base64", "strings", ""},
