@@ -211,6 +211,16 @@ func (s *exprSuite) Test_Builtin_length_empty_list(c *C) {
 	c.Assert(intResult, Equals, 0)
 }
 
+func (s *exprSuite) Test_Builtin_length_on_strings(c *C) {
+	lst := LiftString("hello")
+	apply := NewApply(LiftFunction(builtinListLength), []Script{lst})
+	result, err := apply.Eval(nil)
+	c.Assert(err, IsNil)
+	c.Assert(IsIntegerAtom(result), Equals, true)
+	intResult := ExpectIntegerAtom(result)
+	c.Assert(intResult, Equals, 5)
+}
+
 func (s *exprSuite) Test_Builtin_path_exists_true(c *C) {
 	for _, f := range Stdlib {
 		if f.Id == "path_exists" {

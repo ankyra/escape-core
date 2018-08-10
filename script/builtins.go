@@ -198,7 +198,11 @@ func builtinListLength(env *ScriptEnvironment, inputValues []Script) (Script, er
 	}
 	lstArg := inputValues[0]
 	if !IsListAtom(lstArg) {
-		return nil, fmt.Errorf("Expecting list argument in list length call, but got '%s'", lstArg.Type().Name())
+		if IsStringAtom(lstArg) {
+			str := ExpectStringAtom(lstArg)
+			return LiftInteger(len(str)), nil
+		}
+		return nil, fmt.Errorf("Expecting list or string argument in length call, but got '%s'", lstArg.Type().Name())
 	}
 	lst := ExpectListAtom(inputValues[0])
 	return LiftInteger(len(lst)), nil
