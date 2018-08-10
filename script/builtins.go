@@ -59,6 +59,7 @@ var Stdlib = []StdlibFunc{
 	StdlibFunc{"base64_decode", ShouldLift(base64.StdEncoding.DecodeString), "Decode string from base64", "strings", ""},
 	StdlibFunc{"trim", ShouldLift(strings.TrimSpace), "Returns a slice of the string s, with all leading and trailing white space removed, as defined by Unicode. ", "strings", ""},
 	StdlibFunc{"list_index", LiftFunction(builtinListIndex), "Index a list at position `n`. Usually accessed implicitly using indexing syntax (eg. `list[0]`)", "lists", "n :: integer"},
+	StdlibFunc{"length", LiftFunction(builtinListLength), "Returns the length of the list", "lists", "n :: integer"},
 	StdlibFunc{"list_slice", LiftFunction(builtinListSlice), "Slice a list. Usually accessed implicitly using slice syntax (eg. `list[0:5]`)", "lists", "i :: integer, j :: integer"},
 	StdlibFunc{"add", ShouldLift(builtinAdd), "Add two integers", "integers", "y :: integer"},
 	StdlibFunc{"timestamp", ShouldLift(builtinTimestamp), "Returns a UNIX timestamp", "", ""},
@@ -189,6 +190,18 @@ func builtinConcat(env *ScriptEnvironment, inputValues []Script) (Script, error)
 		}
 	}
 	return LiftString(result), nil
+}
+
+func builtinListLength(env *ScriptEnvironment, inputValues []Script) (Script, error) {
+	if err := builtinArgCheck(1, "list_index", inputValues); err != nil {
+		return nil, err
+	}
+	lstArg := inputValues[0]
+	if !IsListAtom(lstArg) {
+		return nil, fmt.Errorf("Expecting list argument in list length call, but got '%s'", lstArg.Type().Name())
+	}
+	lst := ExpectListAtom(inputValues[0])
+	return LiftInteger(len(lst)), nil
 }
 
 func builtinListIndex(env *ScriptEnvironment, inputValues []Script) (Script, error) {
