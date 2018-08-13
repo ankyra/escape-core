@@ -289,8 +289,8 @@ func builtinAND(env *ScriptEnvironment, inputValues []Script) (Script, error) {
 	}
 	boolArg1 := inputValues[0]
 	boolArg2 := inputValues[1]
-	if !IsBoolAtom(boolArg1) && !IsBoolAtom(boolArg2) {
-		return nil, fmt.Errorf("Expecting bool argument in and call, but got '%s'", boolArg.Type().Name())
+	if !IsBoolAtom(boolArg1) || !IsBoolAtom(boolArg2) {
+		return nil, fmt.Errorf("Expecting bool arguments in and call, but got '%s' and '%s'", boolArg1.Type().Name(), boolArg2.Type().Name())
 	}
 	bool1 := ExpectBoolAtom(boolArg1)
 	bool2 := ExpectBoolAtom(boolArg2)
@@ -303,8 +303,8 @@ func builtinOR(env *ScriptEnvironment, inputValues []Script) (Script, error) {
 	}
 	boolArg1 := inputValues[0]
 	boolArg2 := inputValues[1]
-	if !IsBoolAtom(boolArg1) && !IsBoolAtom(boolArg2) {
-		return nil, fmt.Errorf("Expecting bool argument in and call, but got '%s'", boolArg.Type().Name())
+	if !IsBoolAtom(boolArg1) || !IsBoolAtom(boolArg2) {
+		return nil, fmt.Errorf("Expecting bool arguments in and call, but got '%s' and '%s'", boolArg1.Type().Name(), boolArg2.Type().Name())
 	}
 	bool1 := ExpectBoolAtom(boolArg1)
 	bool2 := ExpectBoolAtom(boolArg2)
