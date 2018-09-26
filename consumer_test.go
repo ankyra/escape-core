@@ -29,13 +29,17 @@ func (s *metadataSuite) Test_NewConsumerConfig(c *C) {
 
 func (s *metadataSuite) Test_NewConsumerConfigFromMap(c *C) {
 	consumer, err := NewConsumerConfigFromMap(map[interface{}]interface{}{
-		"name":   "test",
-		"scopes": []interface{}{"build", "deploy"},
+		"name":            "test",
+		"scopes":          []interface{}{"build", "deploy"},
+		"skip_activate":   true,
+		"skip_deactivate": true,
 	})
 	c.Assert(err, IsNil)
 	c.Assert(consumer.Name, Equals, "test")
 	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
 	c.Assert(consumer.VariableName, Equals, "test")
+	c.Assert(consumer.SkipActivate, Equals, true)
+	c.Assert(consumer.SkipDeactivate, Equals, true)
 }
 
 func (s *metadataSuite) Test_NewConsumerConfigFromMap_renamed_var(c *C) {
