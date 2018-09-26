@@ -179,7 +179,7 @@ func NewConsumerConfigFromMap(dep map[interface{}]interface{}) (*ConsumerConfig,
 			}
 			name = valString
 		} else if key == "scopes" {
-			s, err := parseScopesFromInterface(val)
+			s, err := NewScopesFromInterface(val)
 			if err != nil {
 				return nil, err
 			}
@@ -209,22 +209,6 @@ func NewConsumerConfigFromMap(dep map[interface{}]interface{}) (*ConsumerConfig,
 	cfg.SkipActivate = skipActivate
 	cfg.SkipDeactivate = skipDeactivate
 	return cfg, cfg.ValidateAndFix()
-}
-
-func parseScopesFromInterface(val interface{}) ([]string, error) {
-	valList, ok := val.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("Expecting string in scopes, got '%v' (%T)", val, val)
-	}
-	scopes := []string{}
-	for _, val := range valList {
-		kStr, ok := val.(string)
-		if !ok {
-			return nil, fmt.Errorf("Expecting string in scopes, got '%v' (%T)", val, val)
-		}
-		scopes = append(scopes, kStr)
-	}
-	return scopes, nil
 }
 
 func (c *ConsumerConfig) ValidateAndFix() error {

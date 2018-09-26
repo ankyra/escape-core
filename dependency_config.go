@@ -81,7 +81,7 @@ type DependencyConfig struct {
 
 	// A list of scopes (`build`, `deploy`) that defines during which stage(s)
 	// this dependency should be fetched and deployed. *Currently not implemented!*
-	Scopes []string `json:"scopes" yaml:"scopes"`
+	Scopes Scopes `json:"scopes" yaml:"scopes"`
 
 	// Parsed out of the release ID. For example: when release id is
 	// `"my-org/my-name-v1.0"` this value is `"my-org"`.
@@ -107,7 +107,7 @@ func NewDependencyConfig(releaseId string) *DependencyConfig {
 		Mapping:       map[string]interface{}{},
 		BuildMapping:  map[string]interface{}{},
 		DeployMapping: map[string]interface{}{},
-		Scopes:        []string{"build", "deploy"},
+		Scopes:        AllScopes,
 		Consumes:      map[string]string{},
 	}
 }
@@ -158,7 +158,7 @@ func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 		d.DeployMapping = map[string]interface{}{}
 	}
 	if d.Scopes == nil || len(d.Scopes) == 0 {
-		d.Scopes = []string{"build", "deploy"}
+		d.Scopes = AllScopes
 	}
 	if err := d.EnsureConfigIsParsed(); err != nil {
 		return err
@@ -199,12 +199,7 @@ func (d *DependencyConfig) AddVariableMapping(scopes []string, id, key string) {
 }
 
 func (d *DependencyConfig) InScope(scope string) bool {
-	for _, s := range d.Scopes {
-		if s == scope {
-			return true
-		}
-	}
-	return false
+	return d.Scopes.InScope(scope)
 }
 
 func ExpectingTypeForDependencyFieldError(typ, field string, val interface{}) error {
@@ -304,7 +299,7 @@ func NewDependencyConfigFromMap(dep map[interface{}]interface{}) (*DependencyCon
 				consumes[k] = vStr
 			}
 		} else if key == "scopes" {
-			s, err := parseScopesFromInterface(val)
+			s, err := NewScopesFromInterface(val)
 			if err != nil {
 				return nil, err
 			}

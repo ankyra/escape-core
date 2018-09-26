@@ -35,7 +35,7 @@ func (s *metadataSuite) Test_NewDependencyConfig_Validate_happy_path(c *C) {
 	c.Assert(dep.BuildMapping, HasLen, 0)
 	c.Assert(dep.DeployMapping, Not(IsNil))
 	c.Assert(dep.DeployMapping, HasLen, 0)
-	c.Assert(dep.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(dep.Scopes, DeepEquals, AllScopes)
 	c.Assert(dep.Consumes, DeepEquals, map[string]string{})
 }
 
@@ -154,7 +154,7 @@ func (s *metadataSuite) Test_NewDependencyConfigFromMap(c *C) {
 	c.Assert(dep.DeployMapping, HasLen, 2)
 	c.Assert(dep.DeployMapping["input_variable1"], Equals, "test")
 	c.Assert(dep.DeployMapping["deploy"], Equals, "deploying")
-	c.Assert(dep.Scopes, DeepEquals, []string{"build"})
+	c.Assert(dep.Scopes, DeepEquals, BuildScopes)
 	c.Assert(dep.Consumes, DeepEquals, map[string]string{"test": "whatver"})
 }
 
