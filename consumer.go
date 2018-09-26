@@ -114,7 +114,7 @@ type ConsumerConfig struct {
 	// this dependency should be fetched and deployed. Also see
 	// [`build_consumes`](/docs/reference/escape-plan/#build_consumes] and
 	// [`deploy_consumes`](/docs/reference/escape-plan/#deploy_consumes].
-	Scopes []string `json:"scopes" yaml:"scopes"`
+	Scopes Scopes `json:"scopes" yaml:"scopes"`
 
 	// The variable used to reference this consumer. Overwriting this field in
 	// the Escape plan has no effect.
@@ -133,7 +133,7 @@ type ConsumerConfig struct {
 func NewConsumerConfig(name string) *ConsumerConfig {
 	return &ConsumerConfig{
 		Name:           name,
-		Scopes:         []string{"build", "deploy"},
+		Scopes:         AllScopes,
 		VariableName:   name,
 		SkipActivate:   false,
 		SkipDeactivate: false,
@@ -239,12 +239,15 @@ func (c *ConsumerConfig) ValidateAndFix() error {
 	}
 	return nil
 }
+func (c *ConsumerConfig) Copy() *ConsumerConfig {
+	result := NewConsumerConfig(c.Name)
+	result.Scopes = c.Scopes.Copy()
+	result.VariableName = c.VariableName
+	result.SkipActivate = c.SkipActivate
+	result.SkipDeactivate = c.SkipDeactivate
+	return result
+}
 
 func (c *ConsumerConfig) InScope(scope string) bool {
-	for _, s := range c.Scopes {
-		if s == scope {
-			return true
-		}
-	}
-	return false
+	return c.Scopes.InScope(scope)
 }

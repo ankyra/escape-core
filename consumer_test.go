@@ -20,11 +20,28 @@ import (
 	. "gopkg.in/check.v1"
 )
 
+func (s *metadataSuite) Test_ConsumerConfig_Copy(c *C) {
+	consumer, err := NewConsumerConfigFromMap(map[interface{}]interface{}{
+		"name":          "test as t",
+		"scopes":        []interface{}{"build", "deploy"},
+		"skip_activate": true,
+	})
+	c.Assert(err, IsNil)
+	copy := consumer.Copy()
+	c.Assert(copy.Name, Equals, "test")
+	c.Assert(copy.Scopes, DeepEquals, AllScopes)
+	c.Assert(copy.VariableName, Equals, "t")
+	c.Assert(copy.SkipActivate, Equals, true)
+	c.Assert(copy.SkipDeactivate, Equals, false)
+}
+
 func (s *metadataSuite) Test_NewConsumerConfig(c *C) {
 	consumer := NewConsumerConfig("test")
 	c.Assert(consumer.Name, Equals, "test")
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 	c.Assert(consumer.VariableName, Equals, "test")
+	c.Assert(consumer.SkipActivate, Equals, false)
+	c.Assert(consumer.SkipDeactivate, Equals, false)
 }
 
 func (s *metadataSuite) Test_NewConsumerConfigFromMap(c *C) {
@@ -36,7 +53,7 @@ func (s *metadataSuite) Test_NewConsumerConfigFromMap(c *C) {
 	})
 	c.Assert(err, IsNil)
 	c.Assert(consumer.Name, Equals, "test")
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 	c.Assert(consumer.VariableName, Equals, "test")
 	c.Assert(consumer.SkipActivate, Equals, true)
 	c.Assert(consumer.SkipDeactivate, Equals, true)
@@ -49,7 +66,7 @@ func (s *metadataSuite) Test_NewConsumerConfigFromMap_renamed_var(c *C) {
 	})
 	c.Assert(err, IsNil)
 	c.Assert(consumer.Name, Equals, "test")
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 	c.Assert(consumer.VariableName, Equals, "t")
 }
 
@@ -59,7 +76,7 @@ func (s *metadataSuite) Test_NewConsumerConfigFromMap_No_Scopes_360_blaze_it(c *
 	})
 	c.Assert(err, IsNil)
 	c.Assert(consumer.Name, Equals, "test")
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 	c.Assert(consumer.VariableName, Equals, "test")
 }
 
@@ -70,7 +87,7 @@ func (s *metadataSuite) Test_NewConsumerConfigFromMap_limited_scope(c *C) {
 	})
 	c.Assert(err, IsNil)
 	c.Assert(consumer.Name, Equals, "test")
-	c.Assert(consumer.Scopes, DeepEquals, []string{"deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, DeployScopes)
 	c.Assert(consumer.VariableName, Equals, "test")
 }
 
@@ -78,7 +95,7 @@ func (s *metadataSuite) Test_NewConsumerConfigFromInterface_String(c *C) {
 	consumer, err := NewConsumerConfigFromInterface("test")
 	c.Assert(err, IsNil)
 	c.Assert(consumer.Name, Equals, "test")
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 	c.Assert(consumer.VariableName, Equals, "test")
 }
 
@@ -86,7 +103,7 @@ func (s *metadataSuite) Test_NewConsumerConfigFromInterface_Renamed_String(c *C)
 	consumer, err := NewConsumerConfigFromInterface("test as t")
 	c.Assert(err, IsNil)
 	c.Assert(consumer.Name, Equals, "test")
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 	c.Assert(consumer.VariableName, Equals, "t")
 }
 
@@ -107,7 +124,7 @@ func (s *metadataSuite) Test_NewConsumerConfigFromInterface_Map(c *C) {
 	consumer, err := NewConsumerConfigFromInterface(map[interface{}]interface{}{"name": "test"})
 	c.Assert(err, IsNil)
 	c.Assert(consumer.Name, Equals, "test")
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 	c.Assert(consumer.VariableName, Equals, "test")
 }
 
@@ -120,12 +137,12 @@ func (s *metadataSuite) Test_ConsumerConfig_Validate_sets_scopes_if_nil(c *C) {
 	consumer := NewConsumerConfig("test")
 	consumer.Scopes = nil
 	c.Assert(consumer.ValidateAndFix(), IsNil)
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 }
 
 func (s *metadataSuite) Test_ConsumerConfig_Validate_sets_scopes_if_empty(c *C) {
 	consumer := NewConsumerConfig("test")
 	consumer.Scopes = []string{}
 	c.Assert(consumer.ValidateAndFix(), IsNil)
-	c.Assert(consumer.Scopes, DeepEquals, []string{"build", "deploy"})
+	c.Assert(consumer.Scopes, DeepEquals, AllScopes)
 }
