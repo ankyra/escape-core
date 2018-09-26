@@ -37,6 +37,7 @@ inputs:
 includes:
 - docs/
 - parsers/
+- scopes/
 - script/
 - state/
 - templates/
