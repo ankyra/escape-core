@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/ankyra/escape-core/parsers"
+	"github.com/ankyra/escape-core/scopes"
 )
 
 /*
@@ -81,7 +82,7 @@ type DependencyConfig struct {
 
 	// A list of scopes (`build`, `deploy`) that defines during which stage(s)
 	// this dependency should be fetched and deployed. *Currently not implemented!*
-	Scopes Scopes `json:"scopes" yaml:"scopes"`
+	Scopes scopes.Scopes `json:"scopes" yaml:"scopes"`
 
 	// Parsed out of the release ID. For example: when release id is
 	// `"my-org/my-name-v1.0"` this value is `"my-org"`.
@@ -107,7 +108,7 @@ func NewDependencyConfig(releaseId string) *DependencyConfig {
 		Mapping:       map[string]interface{}{},
 		BuildMapping:  map[string]interface{}{},
 		DeployMapping: map[string]interface{}{},
-		Scopes:        AllScopes,
+		Scopes:        scopes.AllScopes,
 		Consumes:      map[string]string{},
 	}
 }
@@ -158,7 +159,7 @@ func (d *DependencyConfig) Validate(m *ReleaseMetadata) error {
 		d.DeployMapping = map[string]interface{}{}
 	}
 	if d.Scopes == nil || len(d.Scopes) == 0 {
-		d.Scopes = AllScopes
+		d.Scopes = scopes.AllScopes
 	}
 	if err := d.EnsureConfigIsParsed(); err != nil {
 		return err
@@ -239,7 +240,7 @@ func NewDependencyConfigFromMap(dep map[interface{}]interface{}) (*DependencyCon
 	buildMapping := map[string]interface{}{}
 	deployMapping := map[string]interface{}{}
 	consumes := map[string]string{}
-	scopes := []string{}
+	depScopes := []string{}
 	for key, val := range dep {
 		var err error
 		keyStr, ok := key.(string)
@@ -299,11 +300,11 @@ func NewDependencyConfigFromMap(dep map[interface{}]interface{}) (*DependencyCon
 				consumes[k] = vStr
 			}
 		} else if key == "scopes" {
-			s, err := NewScopesFromInterface(val)
+			s, err := scopes.NewScopesFromInterface(val)
 			if err != nil {
 				return nil, err
 			}
-			scopes = s
+			depScopes = s
 		}
 	}
 	if releaseId == "" {
@@ -314,7 +315,7 @@ func NewDependencyConfigFromMap(dep map[interface{}]interface{}) (*DependencyCon
 	cfg.VariableName = variable
 	cfg.BuildMapping = buildMapping
 	cfg.DeployMapping = deployMapping
-	cfg.Scopes = scopes
+	cfg.Scopes = depScopes
 	cfg.Consumes = consumes
 	return cfg, nil
 }

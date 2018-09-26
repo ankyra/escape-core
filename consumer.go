@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/ankyra/escape-core/parsers"
+	"github.com/ankyra/escape-core/scopes"
 )
 
 /*
@@ -114,7 +115,7 @@ type ConsumerConfig struct {
 	// this dependency should be fetched and deployed. Also see
 	// [`build_consumes`](/docs/reference/escape-plan/#build_consumes] and
 	// [`deploy_consumes`](/docs/reference/escape-plan/#deploy_consumes].
-	Scopes Scopes `json:"scopes" yaml:"scopes"`
+	Scopes scopes.Scopes `json:"scopes" yaml:"scopes"`
 
 	// The variable used to reference this consumer. Overwriting this field in
 	// the Escape plan has no effect.
@@ -133,7 +134,7 @@ type ConsumerConfig struct {
 func NewConsumerConfig(name string) *ConsumerConfig {
 	return &ConsumerConfig{
 		Name:           name,
-		Scopes:         AllScopes,
+		Scopes:         scopes.AllScopes,
 		VariableName:   name,
 		SkipActivate:   false,
 		SkipDeactivate: false,
@@ -166,7 +167,7 @@ func NewConsumerConfigFromMap(dep map[interface{}]interface{}) (*ConsumerConfig,
 	var name string
 	var skipActivate bool
 	var skipDeactivate bool
-	scopes := []string{}
+	consumesScopes := scopes.Scopes{}
 	for key, val := range dep {
 		keyStr, ok := key.(string)
 		if !ok {
@@ -179,11 +180,11 @@ func NewConsumerConfigFromMap(dep map[interface{}]interface{}) (*ConsumerConfig,
 			}
 			name = valString
 		} else if key == "scopes" {
-			s, err := NewScopesFromInterface(val)
+			s, err := scopes.NewScopesFromInterface(val)
 			if err != nil {
 				return nil, err
 			}
-			scopes = s
+			consumesScopes = s
 		} else if key == "skip_activate" {
 			valBool, ok := val.(bool)
 			if !ok {
@@ -205,7 +206,7 @@ func NewConsumerConfigFromMap(dep map[interface{}]interface{}) (*ConsumerConfig,
 	if err != nil {
 		return nil, err
 	}
-	cfg.Scopes = scopes
+	cfg.Scopes = consumesScopes
 	cfg.SkipActivate = skipActivate
 	cfg.SkipDeactivate = skipDeactivate
 	return cfg, cfg.ValidateAndFix()
