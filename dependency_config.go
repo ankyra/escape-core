@@ -124,6 +124,29 @@ func DependencyNeedsResolvingError(dependencyReleaseId string) error {
 	return fmt.Errorf("The dependency '%s' needs its version resolved.", dependencyReleaseId)
 }
 
+func (d *DependencyConfig) Copy() *DependencyConfig {
+	result := NewDependencyConfig(d.ReleaseId)
+	for k, v := range d.Mapping {
+		result.Mapping[k] = v
+	}
+	for k, v := range d.BuildMapping {
+		result.BuildMapping[k] = v
+	}
+	for k, v := range d.DeployMapping {
+		result.DeployMapping[k] = v
+	}
+	for k, v := range d.Consumes {
+		result.Consumes[k] = v
+	}
+	result.DeploymentName = d.DeploymentName
+	result.VariableName = d.VariableName
+	result.Scopes = d.Scopes.Copy()
+	result.Project = d.Project
+	result.Name = d.Name
+	result.Version = d.Version
+	return result
+}
+
 func (d *DependencyConfig) EnsureConfigIsParsed() error {
 	parsed, err := parsers.ParseDependency(d.ReleaseId)
 	if err != nil {
